@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Noto Sans TC", "PingFang TC", "Noto Sans CJK TC", "Microsoft JhengHei", sans-serif;
+  --font-latin: "Outfit", "Avenir Next", "Trebuchet MS", sans-serif;
+  --color-cream: #fff9f2;
+  --color-ink: #2a2430;
+  --color-muted: #6b6570;
+  --color-line: #f0e4ec;
+  --color-pink: #f8bbd0;
+  --color-blush: #fff5fb;
+  --color-lavender: #e1bee7;
+  --color-sky: #b3e5fc;
+  --color-mint: #b2dfdb;
+  --color-gold: #c5a059;
+}
+
+html {
+  color-scheme: light;
+  background: #fff9f2;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  color: #2a2430;
+  font-family: var(--font-sans);
+  background-color: #fff9f2;
+  background-image:
+    radial-gradient(ellipse 72% 42% at 0% -8%, rgba(248, 187, 208, 0.55), transparent 58%),
+    radial-gradient(ellipse 52% 38% at 100% 0%, rgba(179, 229, 252, 0.42), transparent 52%),
+    radial-gradient(ellipse 42% 32% at 78% 100%, rgba(225, 190, 231, 0.34), transparent 56%);
+  background-attachment: fixed;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+::selection {
+  background: #f8bbd0;
+  color: #2a2430;
+}
+
+button,
+a,
+input,
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+@keyframes belief-dot {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.belief-dot {
+  animation: belief-dot 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .belief-dot {
+    animation: none;
+    opacity: 0.8;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}

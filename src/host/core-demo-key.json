@@ -1,0 +1,53 @@
+{
+  "deck": "core",
+  "cards": [
+    {
+      "card_id": "core-1",
+      "correct": "no"
+    },
+    {
+      "card_id": "core-2",
+      "correct": "yes"
+    },
+    {
+      "card_id": "core-3",
+      "correct": "no"
+    },
+    {
+      "card_id": "core-4",
+      "correct": "yes"
+    },
+    {
+      "card_id": "core-5",
+      "correct": "no"
+    },
+    {
+      "card_id": "core-6",
+      "correct": "yes"
+    },
+    {
+      "card_id": "core-7",
+      "correct": "no"
+    },
+    {
+      "card_id": "core-8",
+      "correct": "yes"
+    },
+    {
+      "card_id": "core-9",
+      "correct": "no"
+    },
+    {
+      "card_id": "core-10",
+      "correct": "no"
+    },
+    {
+      "card_id": "core-11",
+      "correct": "no"
+    },
+    {
+      "card_id": "core-12",
+      "correct": "no"
+    }
+  ]
+}

@@ -1,0 +1,206 @@
+{
+  "deck": "core",
+  "source": "YES_NO_ANSWER_KEY",
+  "cards": [
+    {
+      "card_id": "core-1",
+      "text": "我恨我自己"
+    },
+    {
+      "card_id": "core-2",
+      "text": "我愛我自己"
+    },
+    {
+      "card_id": "core-3",
+      "text": "我不值得被愛"
+    },
+    {
+      "card_id": "core-4",
+      "text": "我值得被愛"
+    },
+    {
+      "card_id": "core-5",
+      "text": "我懷疑自己"
+    },
+    {
+      "card_id": "core-6",
+      "text": "我信任自己"
+    },
+    {
+      "card_id": "core-7",
+      "text": "我害怕孤獨"
+    },
+    {
+      "card_id": "core-8",
+      "text": "我享受獨處"
+    },
+    {
+      "card_id": "core-9",
+      "text": "我憎恨被欺騙"
+    },
+    {
+      "card_id": "core-10",
+      "text": "我害怕被欺騙"
+    },
+    {
+      "card_id": "core-11",
+      "text": "我憎恨被冤枉"
+    },
+    {
+      "card_id": "core-12",
+      "text": "我害怕受傷害"
+    },
+    {
+      "card_id": "core-13",
+      "text": "我害怕失望"
+    },
+    {
+      "card_id": "core-14",
+      "text": "我是受害者"
+    },
+    {
+      "card_id": "core-15",
+      "text": "我害怕被排斥"
+    },
+    {
+      "card_id": "core-16",
+      "text": "我對未來沒有信心"
+    },
+    {
+      "card_id": "core-17",
+      "text": "我對未知存有恐懼"
+    },
+    {
+      "card_id": "core-18",
+      "text": "我害怕生病"
+    },
+    {
+      "card_id": "core-19",
+      "text": "我害怕傷害別人"
+    },
+    {
+      "card_id": "core-20",
+      "text": "我害怕衝突"
+    },
+    {
+      "card_id": "core-21",
+      "text": "我害怕被拒絕"
+    },
+    {
+      "card_id": "core-22",
+      "text": "我害怕拒絕別人"
+    },
+    {
+      "card_id": "core-23",
+      "text": "我害怕講真說話"
+    },
+    {
+      "card_id": "core-24",
+      "text": "我害怕被背叛"
+    },
+    {
+      "card_id": "core-25",
+      "text": "我不夠好"
+    },
+    {
+      "card_id": "core-26",
+      "text": "執著會令我成功"
+    },
+    {
+      "card_id": "core-27",
+      "text": "我喜歡和諧"
+    },
+    {
+      "card_id": "core-28",
+      "text": "我害怕被控制"
+    },
+    {
+      "card_id": "core-29",
+      "text": "我沒有自由"
+    },
+    {
+      "card_id": "core-30",
+      "text": "別人不了解我"
+    },
+    {
+      "card_id": "core-31",
+      "text": "我可以讓別人了解我"
+    },
+    {
+      "card_id": "core-32",
+      "text": "我不滿足"
+    },
+    {
+      "card_id": "core-33",
+      "text": "我是匿乏的"
+    },
+    {
+      "card_id": "core-34",
+      "text": "我是豐盛的"
+    },
+    {
+      "card_id": "core-35",
+      "text": "我是富足的"
+    },
+    {
+      "card_id": "core-36",
+      "text": "我是自由的"
+    },
+    {
+      "card_id": "core-37",
+      "text": "我是健康的"
+    },
+    {
+      "card_id": "core-38",
+      "text": "我執著結果"
+    },
+    {
+      "card_id": "core-39",
+      "text": "一切都是最好的安排"
+    },
+    {
+      "card_id": "core-40",
+      "text": "我能明智辨別虛偽"
+    },
+    {
+      "card_id": "core-41",
+      "text": "我信任我的直覺"
+    },
+    {
+      "card_id": "core-42",
+      "text": "我對未來充滿信心"
+    },
+    {
+      "card_id": "core-43",
+      "text": "我對未知只專注我想要的結果"
+    },
+    {
+      "card_id": "core-44",
+      "text": "我不值得擁有一切美好與財富"
+    },
+    {
+      "card_id": "core-45",
+      "text": "我值得擁有一切美好與財富"
+    },
+    {
+      "card_id": "core-46",
+      "text": "壓力是推動力"
+    },
+    {
+      "card_id": "core-47",
+      "text": "我知道我可以輕鬆處理壓力"
+    },
+    {
+      "card_id": "core-48",
+      "text": "我知道在何時如何學會放鬆"
+    },
+    {
+      "card_id": "core-49",
+      "text": "我是一個輕鬆自在的存在"
+    },
+    {
+      "card_id": "core-50",
+      "text": "我愛一切，一切愛我"
+    }
+  ]
+}
