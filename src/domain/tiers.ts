@@ -1,4 +1,4 @@
-/** 暫定分階，只供個人整理顯示，不是排行榜。 */
+/** 暫定分階，只供個人整理顯示。房內排名另計答中題數。 */
 export function scoreTier(correct: number, total: number): string | null {
   if (total <= 0) return null
   const ratio = correct / total

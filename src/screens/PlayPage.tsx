@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '@/api'
 import { useGame } from '@/api/useGame'
 import { BeliefCard } from '@/components/BeliefCard'
+import { CardWave } from '@/components/CardWave'
+import { Leaderboard } from '@/components/Leaderboard'
 import { SelfPaceNotice } from '@/components/SelfPaceNotice'
 import { BrandMark } from '@/components/BrandMark'
 import { Frame } from '@/components/Frame'
 import { SpeakControl } from '@/components/SpeakControl'
-import { cardsFor } from '@/domain/cards'
+import { cardsFor, CHOICE_FACE_SRC } from '@/domain/cards'
 import { advancePace, usePace } from '@/self/pace'
 import { cn } from '@/lib/utils'
 import { usePageTitle } from '@/lib/title'
@@ -63,36 +65,42 @@ export function PlayPage() {
 
         {card ? (
           <div className="mt-5">
-            <BeliefCard theme={card.theme} text={card.text} />
+            <BeliefCard theme={card.theme} text={card.text} imageSrc={card.imageSrc} />
           </div>
         ) : (
           <p className="mt-8 text-muted">這一套已經看完。</p>
         )}
 
         {card ? (
-          <div className="mt-5 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="是或否">
+          <div className="mt-5 grid grid-cols-1 gap-3 min-[400px]:grid-cols-2" role="group" aria-label="是或毫無道理">
             {card.options.map((option) => {
               const choiceId = option.id === 'no' ? 'no' : 'yes'
               const selected = pending === choiceId
+              const yes = choiceId === 'yes'
               return (
                 <button
                   key={option.id}
                   type="button"
-                  role="radio"
-                  aria-checked={selected}
+                  aria-label={option.label}
+                  aria-pressed={selected}
                   disabled={pending != null || paused}
                   onClick={() => void choose(choiceId)}
                   className={cn(
-                    'min-h-28 rounded-[28px] border px-4 py-6 text-center text-2xl font-medium tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lavender disabled:opacity-100',
-                    selected
-                      ? choiceId === 'yes'
-                        ? 'border-mint bg-[#f4fbfa] text-ink'
-                        : 'border-lavender bg-blush text-ink'
-                      : 'border-line bg-white text-ink hover:bg-blush',
+                    'flex min-h-16 items-center gap-3 rounded-full border px-2 py-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lavender disabled:opacity-100',
+                    yes
+                      ? 'border-[#b7e0d8] bg-[#f4fbf8] hover:bg-[#e7f7f3]'
+                      : 'border-[#f3c3cf] bg-[#fff6f8] hover:bg-[#ffeff3]',
+                    selected ? 'ring-2 ring-lavender' : '',
+                    pending != null && !selected ? 'opacity-60' : '',
                   )}
                 >
-                  {option.label}
-                  {selected ? <span className="mt-2 block text-sm font-normal text-muted">正在記下</span> : null}
+                  <span className="size-12 shrink-0 overflow-hidden rounded-full bg-white">
+                    <img src={CHOICE_FACE_SRC[choiceId]} alt="" className="size-full object-cover" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-lg font-medium leading-tight text-ink">{yes ? '是' : '毫無道理'}</span>
+                    <span className="block text-xs tracking-[0.14em] text-muted">{yes ? 'YES' : 'NO'}</span>
+                  </span>
                 </button>
               )
             })}
@@ -104,8 +112,16 @@ export function PlayPage() {
             {error}
           </p>
         ) : (
-          <p className="mt-4 min-h-6 text-sm text-muted">這句，你選是，還是否。</p>
+          <p className="mt-4 min-h-6 text-sm text-muted">
+            {pending ? '正在記下' : '點選是，或毫無道理。'}
+          </p>
         )}
+        <div className="mt-6">
+          <CardWave pace={pace.answers} variant="compact" />
+        </div>
+        <div className="mt-4">
+          <Leaderboard pace={pace.answers} variant="compact" />
+        </div>
         <div className="mt-4">
           <SpeakControl />
         </div>

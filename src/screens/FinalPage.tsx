@@ -2,12 +2,14 @@ import { useState, type FormEvent } from 'react'
 import { api } from '@/api'
 import { useGame } from '@/api/useGame'
 import { BrandMark } from '@/components/BrandMark'
+import { CardWave } from '@/components/CardWave'
+import { Leaderboard } from '@/components/Leaderboard'
 import { SelfPaceNotice } from '@/components/SelfPaceNotice'
 import { NoticeEmailField } from '@/components/NoticeEmailField'
 import { Frame } from '@/components/Frame'
 import { Panel } from '@/components/Panel'
 import { Button } from '@/components/ui/button'
-import { findCard } from '@/domain/cards'
+import { deckHasAnswerKey, findCard } from '@/domain/cards'
 import { formatSeconds } from '@/domain/format'
 import { selectPersonal, youPlayer } from '@/domain/selectors'
 import { scoreTier } from '@/domain/tiers'
@@ -73,16 +75,25 @@ export function FinalPage() {
           <SelfPaceNotice link={state.selfPaceLink} />
         </div>
         <p className="mt-3 text-base leading-relaxed text-muted">
-          {review ? `${review.name}，這是留給你自己的整理，不是排行榜。` : '這是留給你自己的整理，不是排行榜。'}
+          {review
+            ? `${review.name}，這是留給你自己的整理。排名只計這一場答中幾多題。`
+            : '這是留給你自己的整理。排名只計這一場答中幾多題。'}
         </p>
 
         <Panel className="mt-8 px-6 py-6">
           <h2 className="text-base font-medium">你較需要再停一停的地方</h2>
+          {graded ? (
+            <p className="mt-3 text-base leading-relaxed text-ink">
+              你得到 {paceCorrect} 分。{paceTotal} 題裡，答中 {paceCorrect} 題。
+            </p>
+          ) : null}
           {paceTotal === 0 ? (
             <p className="mt-3 text-sm leading-relaxed text-muted">這一場你還沒有留下選擇。</p>
           ) : !graded ? (
             <p className="mt-3 text-sm leading-relaxed text-muted">
-              你已看了 {paceTotal} 句。伺服器還沒把對照送回來，所以這裡先不顯示分階。
+              {deckHasAnswerKey(state.room.deck)
+                ? `你已看了 ${paceTotal} 張。伺服器還沒把對照送回來，所以這裡先不顯示分數。`
+                : `你已選了 ${paceTotal} 張。這一套的參考答案還沒放進房間，所以先不計分。`}
             </p>
           ) : revisit.length === 0 ? (
             <p className="mt-3 text-sm leading-relaxed text-muted">
@@ -99,6 +110,13 @@ export function FinalPage() {
           )}
         </Panel>
 
+        <div className="mt-4">
+          <CardWave pace={pace.answers} variant="compact" />
+        </div>
+        <div className="mt-4">
+          <Leaderboard pace={pace.answers} />
+        </div>
+
         <Panel className="mt-4 px-6 py-6">
           <h2 className="text-base font-medium">時間</h2>
           <p className="mt-3 text-sm leading-relaxed text-muted">
@@ -114,7 +132,7 @@ export function FinalPage() {
             <>
               <p className="mt-3 text-sm leading-relaxed text-muted">
                 {graded
-                  ? `${paceTotal} 句裡，${paceCorrect} 次與參考方向一致，${paceWrong.length} 次不同。這組數字預設收起，也不會跟別人比較。`
+                  ? `${paceTotal} 句裡，${paceCorrect} 次與參考方向一致，${paceWrong.length} 次不同。這裡不列出每一張的答案。`
                   : review
                     ? `${review.total} 張裡，已核對的一致次數是 ${review.correct}。未核對的不會算成答錯。`
                     : '這一場還沒有個人紀錄。'}

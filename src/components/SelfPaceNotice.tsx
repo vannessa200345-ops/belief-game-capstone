@@ -5,7 +5,7 @@ export function SelfPaceNotice({ link }: { link: SelfPaceLink }) {
   return (
     <p className="text-sm leading-relaxed text-ink" role="status">
       後端自速未上線
-      <span className="mt-1 block text-muted">仍可逐張選是或否。SQL 套用之後刷新，就會改走伺服器。</span>
+      <span className="mt-1 block text-muted">仍可逐張選是或毫無道理。SQL 套用之後刷新，就會改走伺服器。</span>
     </p>
   )
 }

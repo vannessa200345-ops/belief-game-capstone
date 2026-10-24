@@ -27,7 +27,7 @@ export function ResultPage() {
         <h1 className="mt-2 text-[1.7rem] font-medium leading-snug">這一輪先到這裡</h1>
         {card ? (
           <div className="mt-5">
-            <BeliefCard theme={card.theme} text={card.text} compact />
+            <BeliefCard theme={card.theme} text={card.text} imageSrc={card.imageSrc} compact />
           </div>
         ) : null}
 

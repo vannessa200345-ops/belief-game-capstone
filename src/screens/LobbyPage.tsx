@@ -44,7 +44,7 @@ export function LobbyPage() {
         </Panel>
 
         <p className="mt-6 text-sm leading-relaxed text-muted">
-          開始之後，每句只選是或否，選好就到下一張。不用等主持揭示。
+          開始之後，每張只選是或毫無道理，選好就到下一張。不用等主持揭示。
         </p>
         <div className="mt-3">
           <SelfPaceNotice link={state.selfPaceLink} />

@@ -1,4 +1,4 @@
-import { cardAt, cardsFor, findCard } from '../domain/cards.ts'
+import { cardAt, cardsFor, deckHasAnswerKey, findCard } from '../domain/cards.ts'
 import { clearPace } from '../self/pace.ts'
 import {
   DEMO_NAMES,
@@ -505,10 +505,15 @@ export async function endRoom() {
 
 export async function submitSelfPaced(input: { cardId: string; choiceId: 'yes' | 'no'; timeMs: number }) {
   if (input.choiceId !== 'yes' && input.choiceId !== 'no') {
-    return { ok: false as const, error: '只可以選是或否。' }
+    return { ok: false as const, error: '只可以選是或毫無道理。' }
   }
   const card = findCard(input.cardId)
   if (!card) return { ok: false as const, error: '找不到這一句。' }
+  let isCorrect: boolean | null = null
+  if (deckHasAnswerKey(card.deck)) {
+    const { gradeHostChoice } = await import('../host/coreKey.ts')
+    isCorrect = gradeHostChoice(input.cardId, input.choiceId)
+  }
   let accepted = false
   await commit((draft) => {
     if (!draft.youId || draft.room.phase !== 'playing') return false
@@ -520,12 +525,12 @@ export async function submitSelfPaced(input: { cardId: string; choiceId: 'yes' |
       cardId: card.id,
       optionId: input.choiceId,
       ms: Math.max(0, input.timeMs),
-      correct: null,
+      correct: isCorrect,
     })
     return true
   })
   if (!accepted) return { ok: false as const, error: '這一刻還不能選。' }
-  return { ok: true as const, isCorrect: null }
+  return { ok: true as const, isCorrect }
 }
 
 export async function startRoom() {

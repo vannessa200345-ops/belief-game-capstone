@@ -5,6 +5,7 @@ import { BrandMark } from '@/components/BrandMark'
 import { Frame } from '@/components/Frame'
 import { Panel } from '@/components/Panel'
 import { Switch } from '@/components/ui/switch'
+import { findCard } from '@/domain/cards'
 import { formatPercent, formatSeconds } from '@/domain/format'
 import { selectAnalytics } from '@/domain/selectors'
 import { usePageTitle } from '@/lib/title'
@@ -30,7 +31,7 @@ export function AnalyticsPage() {
 
         <h1 className="mt-10 text-[1.85rem] font-medium leading-snug">這一場的整理</h1>
         <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted">
-          先看錯得較多的卡，以及誰逾時、誰還沒選。分數預設不顯示，這裡也不是學員看得到的排行榜。
+          先看錯得較多的卡，以及誰逾時、誰還沒選。逐張分數預設不顯示。學員看得到的是這一場的排名，不是這一頁。
         </p>
 
         <Panel className="mt-8 px-5 py-5 sm:px-6">
@@ -64,10 +65,19 @@ export function AnalyticsPage() {
             </Panel>
           ) : (
             <ul className="mt-4 space-y-3">
-              {analytics.cards.map((card) => (
+              {analytics.cards.map((card) => {
+                const pictured = findCard(card.cardId)
+                return (
                 <li key={card.cardId}>
                   <Panel className="px-5 py-5">
                     <p className="text-sm text-muted">{card.theme}</p>
+                    {pictured?.imageSrc ? (
+                      <img
+                        src={pictured.imageSrc}
+                        alt={card.text}
+                        className="mt-3 w-full max-w-[220px] rounded-2xl border border-line"
+                      />
+                    ) : null}
                     <p className="mt-2 text-base leading-relaxed text-ink">{card.text}</p>
                     <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-blush">
                       <div
@@ -82,7 +92,8 @@ export function AnalyticsPage() {
                     </p>
                   </Panel>
                 </li>
-              ))}
+                )
+              })}
             </ul>
           )}
         </section>
