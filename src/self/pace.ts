@@ -24,6 +24,10 @@ function empty(roomCode: string): PaceState {
   return { roomCode, index: 0, cardStartedAt: Date.now(), answers: [], done: false }
 }
 
+/** 穩定引用：useSyncExternalStore 的 getSnapshot 必須喺無更新時返回同一對象，
+ *  否則會被當成每次渲染都在變，觸發無限迴圈。 */
+const EMPTY_SNAPSHOT: PaceState = { roomCode: '', index: 0, cardStartedAt: 0, answers: [], done: false }
+
 function emit() {
   for (const listener of listeners) listener()
 }
@@ -39,7 +43,7 @@ function persist(next: PaceState) {
 }
 
 export function readPace(roomCode: string): PaceState {
-  if (!roomCode) return empty('')
+  if (!roomCode) return EMPTY_SNAPSHOT
   if (memory?.roomCode === roomCode) return memory
   try {
     const raw = sessionStorage.getItem(PACE_KEY)
@@ -82,7 +86,7 @@ export function usePace(roomCode: string) {
   return useSyncExternalStore(
     subscribePace,
     () => readPace(roomCode),
-    () => empty(roomCode),
+    () => (roomCode ? empty(roomCode) : EMPTY_SNAPSHOT),
   )
 }
 
