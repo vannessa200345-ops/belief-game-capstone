@@ -5,6 +5,8 @@ export const DEMO_ROOM_CODE = 'A4K9'
 export const SLOW_MS = 20_000
 export const MAX_ATTENTION = 8
 export const STORAGE_KEY = 'belief-mvp-v1'
+/** 每套 50 張。core-1 對 /cards/core/01.jpg，money、relationship 同樣。 */
+export const DECK_CARD_COUNT = 50
 
 export const DEMO_NAMES = [
   '陳可恩',

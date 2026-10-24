@@ -1,4 +1,4 @@
-/** 這一場示範先走信念原套頭十二句。全文 JSON 仍留在檔案裡。 */
+/** 舊示範只取頭十二句。房間而家用全套 50 張，見 cards.ts。這個 helper 只對照當初的 core-demo JSON。 */
 export const DEMO_CARD_LIMIT = 12
 
 export function demoCardOrder(cardId: string): number | null {

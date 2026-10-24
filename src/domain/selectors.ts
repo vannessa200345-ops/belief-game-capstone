@@ -1,4 +1,4 @@
-import { cardAt, cardsFor, findCard } from './cards.ts'
+import { cardAt, cardsFor, deckHasAnswerKey, findCard } from './cards.ts'
 import { MAX_ATTENTION, SLOW_MS } from './constants.ts'
 import type {
   AnalyticsSnapshot,
@@ -290,4 +290,133 @@ export function selectPaceBoard(state: GameState) {
 
 export function cardById(id: string): BeliefCard | null {
   return findCard(id)
+}
+
+/** 只帶這一場已核對的對錯，用來計分。不要把選項 id 傳進來。 */
+export interface PaceGrade {
+  cardId: string
+  isCorrect: boolean | null
+}
+
+export interface LeaderRow {
+  playerId: string
+  name: string
+  you: boolean
+  correct: number
+  rank: number
+}
+
+export interface LeaderboardSnapshot {
+  /** false：這套未有參考答案，不要把 0 分當成排名。 */
+  keyed: boolean
+  rows: LeaderRow[]
+  you: LeaderRow | null
+}
+
+function gradesFor(state: GameState, playerId: string, yours: PaceGrade[] | undefined) {
+  const byCard = new Map<string, boolean | null>()
+  for (const answer of state.answers) {
+    if (answer.playerId !== playerId) continue
+    byCard.set(answer.cardId, answer.correct)
+  }
+  if (playerId === state.youId && yours) {
+    for (const grade of yours) {
+      const previous = byCard.get(grade.cardId)
+      if (previous === undefined || grade.isCorrect !== null) byCard.set(grade.cardId, grade.isCorrect)
+    }
+  }
+  let correct = 0
+  for (const value of byCard.values()) {
+    if (value === true) correct += 1
+  }
+  return correct
+}
+
+/**
+ * 這一場排名。只用答中題數，不讀主持答案 key，也不列出邊張選了甚麼。
+ * 主持同示範學員不入榜。
+ */
+export function selectLeaderboard(state: GameState, yours?: PaceGrade[]): LeaderboardSnapshot {
+  const keyed = deckHasAnswerKey(state.room.deck)
+  if (!keyed) return { keyed: false, rows: [], you: null }
+
+  const scored = state.players
+    .filter((player) => !player.host && !player.demo)
+    .map((player) => ({
+      playerId: player.id,
+      name: player.name,
+      you: player.id === state.youId,
+      correct: gradesFor(state, player.id, yours),
+      rank: 0,
+    }))
+    .sort((a, b) => {
+      if (b.correct !== a.correct) return b.correct - a.correct
+      return a.name.localeCompare(b.name, 'zh-Hant')
+    })
+
+  let lastCorrect = -1
+  let rank = 0
+  scored.forEach((row, index) => {
+    if (row.correct !== lastCorrect) {
+      rank = index + 1
+      lastCorrect = row.correct
+    }
+    row.rank = rank
+  })
+
+  return {
+    keyed: true,
+    rows: scored,
+    you: scored.find((row) => row.you) ?? null,
+  }
+}
+
+export interface CardWaveBar {
+  cardId: string
+  number: number
+  correct: number
+  wrong: number
+}
+
+export interface CardWaveSnapshot {
+  /** false：這套未有參考答案，不要畫成全員答錯。 */
+  keyed: boolean
+  bars: CardWaveBar[]
+  peak: number
+}
+
+/**
+ * 每一張的答中／答錯人數。只計已核對的結果，不記邊個選項，也不讀答案 key。
+ * yours 只覆蓋你自己，等交答後條形可以先郁，其他人靠房間紀錄。
+ */
+export function selectCardWaves(state: GameState, yours?: PaceGrade[]): CardWaveSnapshot {
+  const cards = cardsFor(state.room.deck)
+  if (!deckHasAnswerKey(state.room.deck)) return { keyed: false, bars: [], peak: 1 }
+
+  const cell = new Map<string, Map<string, boolean>>()
+  const put = (playerId: string, cardId: string, value: boolean | null) => {
+    if (value !== true && value !== false) return
+    const row = cell.get(cardId) ?? new Map<string, boolean>()
+    row.set(playerId, value)
+    cell.set(cardId, row)
+  }
+  for (const answer of state.answers) put(answer.playerId, answer.cardId, answer.correct)
+  if (state.youId && yours) {
+    for (const grade of yours) put(state.youId, grade.cardId, grade.isCorrect)
+  }
+
+  const bars = cards.map((card, index) => {
+    const row = cell.get(card.id)
+    let correct = 0
+    let wrong = 0
+    if (row) {
+      for (const value of row.values()) {
+        if (value) correct += 1
+        else wrong += 1
+      }
+    }
+    return { cardId: card.id, number: index + 1, correct, wrong }
+  })
+  const peak = bars.reduce((max, bar) => Math.max(max, bar.correct, bar.wrong), 1)
+  return { keyed: true, bars, peak }
 }

@@ -17,6 +17,8 @@ export interface BeliefCard {
   deck: DeckId
   theme: string
   text: string
+  /** 圖卡路徑，例如 /cards/core/01.jpg。文句留作 alt。 */
+  imageSrc: string
   options: CardOption[]
 }
 

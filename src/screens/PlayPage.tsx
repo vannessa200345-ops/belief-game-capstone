@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '@/api'
 import { useGame } from '@/api/useGame'
 import { BeliefCard } from '@/components/BeliefCard'
+import { CardWave } from '@/components/CardWave'
+import { Leaderboard } from '@/components/Leaderboard'
 import { SelfPaceNotice } from '@/components/SelfPaceNotice'
 import { BrandMark } from '@/components/BrandMark'
 import { Frame } from '@/components/Frame'
 import { SpeakControl } from '@/components/SpeakControl'
-import { cardsFor } from '@/domain/cards'
+import { cardsFor, CHOICE_CARD_SRC } from '@/domain/cards'
 import { advancePace, usePace } from '@/self/pace'
 import { cn } from '@/lib/utils'
 import { usePageTitle } from '@/lib/title'
@@ -63,14 +65,14 @@ export function PlayPage() {
 
         {card ? (
           <div className="mt-5">
-            <BeliefCard theme={card.theme} text={card.text} />
+            <BeliefCard theme={card.theme} text={card.text} imageSrc={card.imageSrc} />
           </div>
         ) : (
           <p className="mt-8 text-muted">這一套已經看完。</p>
         )}
 
         {card ? (
-          <div className="mt-5 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="是或否">
+          <div className="mt-5 grid grid-cols-2 items-start gap-3" role="group" aria-label="是或毫無道理">
             {card.options.map((option) => {
               const choiceId = option.id === 'no' ? 'no' : 'yes'
               const selected = pending === choiceId
@@ -78,21 +80,17 @@ export function PlayPage() {
                 <button
                   key={option.id}
                   type="button"
-                  role="radio"
-                  aria-checked={selected}
+                  aria-label={option.label}
+                  aria-pressed={selected}
                   disabled={pending != null || paused}
                   onClick={() => void choose(choiceId)}
                   className={cn(
-                    'min-h-28 rounded-[28px] border px-4 py-6 text-center text-2xl font-medium tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lavender disabled:opacity-100',
-                    selected
-                      ? choiceId === 'yes'
-                        ? 'border-mint bg-[#f4fbfa] text-ink'
-                        : 'border-lavender bg-blush text-ink'
-                      : 'border-line bg-white text-ink hover:bg-blush',
+                    'overflow-hidden rounded-[22px] border border-transparent bg-transparent p-0 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lavender disabled:opacity-100',
+                    selected ? 'ring-2 ring-lavender' : 'hover:brightness-[1.03]',
+                    pending != null && !selected ? 'opacity-60' : '',
                   )}
                 >
-                  {option.label}
-                  {selected ? <span className="mt-2 block text-sm font-normal text-muted">正在記下</span> : null}
+                  <img src={CHOICE_CARD_SRC[choiceId]} alt="" className="block h-auto w-full" />
                 </button>
               )
             })}
@@ -104,8 +102,16 @@ export function PlayPage() {
             {error}
           </p>
         ) : (
-          <p className="mt-4 min-h-6 text-sm text-muted">這句，你選是，還是否。</p>
+          <p className="mt-4 min-h-6 text-sm text-muted">
+            {pending ? '正在記下' : '點選是，或毫無道理。'}
+          </p>
         )}
+        <div className="mt-6">
+          <CardWave pace={pace.answers} variant="compact" />
+        </div>
+        <div className="mt-4">
+          <Leaderboard pace={pace.answers} variant="compact" />
+        </div>
         <div className="mt-4">
           <SpeakControl />
         </div>

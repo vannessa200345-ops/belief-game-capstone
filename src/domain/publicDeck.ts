@@ -1,6 +1,6 @@
-import { DEMO_CARD_LIMIT, demoCardOrder } from './demoDeck.ts'
+import { DECK_CARD_COUNT } from './constants.ts'
 import type { CardOption } from './types.ts'
-import deck from './core-demo-public.json'
+import deck from './core-public.json'
 
 /** 學員畫面只得文句。正確方向不在這個檔。 */
 export interface PublicCard {
@@ -8,20 +8,40 @@ export interface PublicCard {
   text: string
 }
 
+/**
+ * 選項 id 維持 yes／no，跟 src/host 答案 key 同 submit_self_paced 一致。
+ * 字樣跟選擇卡本身：是／YES、毫無道理／NO。
+ */
 export const YES_NO_OPTIONS: CardOption[] = [
   { id: 'yes', label: '是／YES' },
-  { id: 'no', label: '否／NO' },
+  { id: 'no', label: '毫無道理／NO' },
 ]
 
-/** 示範場 core-1…core-12 的牌文。正確方向不在這裡。 */
-export const PUBLIC_CORE: PublicCard[] = deck.cards
-  .filter((card) => demoCardOrder(card.card_id) != null)
-  .sort((a, b) => (demoCardOrder(a.card_id) ?? 0) - (demoCardOrder(b.card_id) ?? 0))
+/** 選擇卡圖。按鈕就係呢兩張圖，不是圖旁邊再加文字掣。 */
+export const CHOICE_CARD_SRC = {
+  yes: '/choices/yes.jpg',
+  no: '/choices/no.jpg',
+} as const
+
+function coreOrder(cardId: string): number | null {
+  const match = /^core-(\d+)$/.exec(cardId)
+  if (!match) return null
+  const number = Number(match[1])
+  if (!Number.isInteger(number) || number < 1 || number > DECK_CARD_COUNT) return null
+  return number
+}
+
+/** 信念原套 core-1…core-50 的牌文。正確方向不在這裡。 */
+export const PUBLIC_CORE: PublicCard[] = [...deck.cards]
+  .sort((a, b) => (coreOrder(a.card_id) ?? 0) - (coreOrder(b.card_id) ?? 0))
   .map((card) => ({
     id: card.card_id,
     text: card.text,
   }))
 
-if (PUBLIC_CORE.length !== DEMO_CARD_LIMIT) {
-  throw new Error('demo deck must be core-1..core-12')
+if (
+  PUBLIC_CORE.length !== DECK_CARD_COUNT ||
+  PUBLIC_CORE.some((card, index) => card.id !== `core-${index + 1}` || card.text.length === 0)
+) {
+  throw new Error('core deck must be core-1..core-50')
 }

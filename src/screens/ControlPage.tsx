@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { api } from '@/api'
 import { useGame } from '@/api/useGame'
 import { BrandMark } from '@/components/BrandMark'
+import { CardWave } from '@/components/CardWave'
+import { Leaderboard } from '@/components/Leaderboard'
 import { SelfPaceNotice } from '@/components/SelfPaceNotice'
 import { Frame } from '@/components/Frame'
 import { Panel } from '@/components/Panel'
@@ -88,13 +90,19 @@ export function ControlPage() {
           </p>
         </div>
 
+        {state.room.phase !== 'lobby' ? (
+          <div className="mt-6">
+            <CardWave />
+          </div>
+        ) : null}
+
         <div className="mt-6 grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div className="space-y-4">
             {state.room.phase === 'lobby' ? (
               <Panel className="px-6 py-6">
                 <h1 className="text-xl font-medium">這一場還沒開始</h1>
                 <p className="mt-2 text-sm leading-relaxed text-muted">
-                  在場 {state.players.length} 人。按一次開始，學員就會自己逐張選是或否。
+                  在場 {state.players.length} 人。按一次開始，學員就會自己逐張選是或毫無道理。
                 </p>
                 <Button className="mt-5" onClick={() => void start()} disabled={pending != null}>
                   {pending === 'start' ? '正在開始' : '開始自速'}
@@ -106,13 +114,15 @@ export function ControlPage() {
               <Panel className="px-6 py-6">
                 <h1 className="text-xl font-medium">這一場已結束</h1>
                 <p className="mt-2 text-sm leading-relaxed text-muted">
-                  學員會看到自己的整理。分數不會出現在他們的主畫面。
+                  學員會看到自己的整理，以及這一場的排名。
                 </p>
                 <Button asChild className="mt-5" variant="outline">
                   <Link to="/host/analytics">查看錯得較多的卡</Link>
                 </Button>
               </Panel>
             ) : null}
+
+            {state.room.phase === 'final' ? <Leaderboard /> : null}
 
             {state.room.phase === 'playing' || state.room.phase === 'paused' ? (
               <>
@@ -158,6 +168,7 @@ export function ControlPage() {
                     <p className="mt-3 text-sm leading-relaxed text-muted">已接上自速。選擇會陸續回到這裡。</p>
                   ) : null}
                 </Panel>
+                <Leaderboard />
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <Button size="lg" className="flex-1" disabled={pending != null} onClick={() => void end()}>
                     {pending === 'end' ? '正在結束' : '結束這一場'}

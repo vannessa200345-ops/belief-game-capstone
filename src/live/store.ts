@@ -1,4 +1,4 @@
-import { findCard } from '../domain/cards.ts'
+import { deckHasAnswerKey, findCard } from '../domain/cards.ts'
 import { parseNoticeEmail } from '../domain/email.ts'
 import { parseDisplayName } from '../domain/name.ts'
 import type {
@@ -53,6 +53,7 @@ let deckPref: DeckId = 'core'
 const listeners = new Set<() => void>()
 let refreshChain: Promise<void> = Promise.resolve()
 let roomChannel: RealtimeChannel | null = null
+let cardChannel: RealtimeChannel | null = null
 let selfPaceRpc: 'unknown' | 'live' | 'missing' = 'unknown'
 let remoteAnswered: Record<string, number> = {}
 let playingSince: number | null = null
@@ -116,13 +117,14 @@ function rememberRoom(id: string | null) {
   bindRoomChannel(id)
 }
 
-/** rooms / players / speak_queue on `room:{room_id}`. Rounds and answers are not on this channel. */
+/** rooms / players / speak_queue on `room:{room_id}`. card_events 另開一條，失敗也不影響這條。 */
 function bindRoomChannel(id: string | null) {
   const supabase = getSupabase()
   if (roomChannel) {
     void supabase.removeChannel(roomChannel)
     roomChannel = null
   }
+  bindCardWave(id)
   if (!id) return
   const refetch = () => {
     void scheduleRefresh()
@@ -143,6 +145,26 @@ function bindRoomChannel(id: string | null) {
       'postgres_changes',
       { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `id=eq.${id}` },
       refetch,
+    )
+    .subscribe()
+}
+
+/** 有人交答時刷新條形。表未加入 realtime publication 時，輪詢仍會補上。 */
+function bindCardWave(id: string | null) {
+  const supabase = getSupabase()
+  if (cardChannel) {
+    void supabase.removeChannel(cardChannel)
+    cardChannel = null
+  }
+  if (!id) return
+  cardChannel = supabase
+    .channel(`room-cards:${id}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'card_events', filter: `room_id=eq.${id}` },
+      () => {
+        void scheduleRefresh()
+      },
     )
     .subscribe()
 }
@@ -363,11 +385,14 @@ export async function startRoom(): Promise<ActionResult> {
       }
       try {
         const { hostDeckPayload } = await import('../host/coreKey.ts')
-        await rpc('start_self_paced', {
-          p_room_id: roomId,
-          p_deck: hostDeckPayload(),
-        })
-        selfPaceRpc = 'live'
+        const payload = hostDeckPayload(memory.room.deck)
+        if (payload) {
+          await rpc('start_self_paced', {
+            p_room_id: roomId,
+            p_deck: payload,
+          })
+          selfPaceRpc = 'live'
+        }
       } catch (error) {
         if (!isMissingRpc(error)) return fail(error)
         selfPaceRpc = 'missing'
@@ -432,9 +457,11 @@ export async function submitSelfPaced(input: {
   timeMs: number
 }): Promise<{ ok: true; isCorrect: boolean | null } | { ok: false; error: string }> {
   if (input.choiceId !== 'yes' && input.choiceId !== 'no') {
-    return { ok: false, error: '只可以選是或否。' }
+    return { ok: false, error: '只可以選是或毫無道理。' }
   }
-  if (!findCard(input.cardId)) return { ok: false, error: '找不到這一句。' }
+  const card = findCard(input.cardId)
+  if (!card) return { ok: false, error: '找不到這一句。' }
+  if (!deckHasAnswerKey(card.deck)) return { ok: true, isCorrect: null }
   if (!roomId) return { ok: false, error: '你還沒有進入房間。' }
   if (selfPaceRpc === 'missing') return { ok: true, isCorrect: null }
   try {
@@ -445,6 +472,7 @@ export async function submitSelfPaced(input: {
       p_time_ms: Math.max(0, Math.round(input.timeMs)),
     })
     selfPaceRpc = 'live'
+    void scheduleRefresh()
     return { ok: true, isCorrect: readIsCorrect(data) }
   } catch (error) {
     if (isMissingRpc(error)) {
