@@ -9,7 +9,7 @@ import { SelfPaceNotice } from '@/components/SelfPaceNotice'
 import { BrandMark } from '@/components/BrandMark'
 import { Frame } from '@/components/Frame'
 import { SpeakControl } from '@/components/SpeakControl'
-import { cardsFor, CHOICE_CARD_SRC } from '@/domain/cards'
+import { cardsFor, CHOICE_FACE_SRC } from '@/domain/cards'
 import { advancePace, usePace } from '@/self/pace'
 import { cn } from '@/lib/utils'
 import { usePageTitle } from '@/lib/title'
@@ -72,10 +72,11 @@ export function PlayPage() {
         )}
 
         {card ? (
-          <div className="mt-5 grid grid-cols-2 items-start gap-3" role="group" aria-label="是或毫無道理">
+          <div className="mt-5 grid grid-cols-1 gap-3 min-[400px]:grid-cols-2" role="group" aria-label="是或毫無道理">
             {card.options.map((option) => {
               const choiceId = option.id === 'no' ? 'no' : 'yes'
               const selected = pending === choiceId
+              const yes = choiceId === 'yes'
               return (
                 <button
                   key={option.id}
@@ -85,12 +86,21 @@ export function PlayPage() {
                   disabled={pending != null || paused}
                   onClick={() => void choose(choiceId)}
                   className={cn(
-                    'overflow-hidden rounded-[22px] border border-transparent bg-transparent p-0 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lavender disabled:opacity-100',
-                    selected ? 'ring-2 ring-lavender' : 'hover:brightness-[1.03]',
+                    'flex min-h-16 items-center gap-3 rounded-full border px-2 py-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lavender disabled:opacity-100',
+                    yes
+                      ? 'border-[#b7e0d8] bg-[#f4fbf8] hover:bg-[#e7f7f3]'
+                      : 'border-[#f3c3cf] bg-[#fff6f8] hover:bg-[#ffeff3]',
+                    selected ? 'ring-2 ring-lavender' : '',
                     pending != null && !selected ? 'opacity-60' : '',
                   )}
                 >
-                  <img src={CHOICE_CARD_SRC[choiceId]} alt="" className="block h-auto w-full" />
+                  <span className="size-12 shrink-0 overflow-hidden rounded-full bg-white">
+                    <img src={CHOICE_FACE_SRC[choiceId]} alt="" className="size-full object-cover" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-lg font-medium leading-tight text-ink">{yes ? '是' : '毫無道理'}</span>
+                    <span className="block text-xs tracking-[0.14em] text-muted">{yes ? 'YES' : 'NO'}</span>
+                  </span>
                 </button>
               )
             })}

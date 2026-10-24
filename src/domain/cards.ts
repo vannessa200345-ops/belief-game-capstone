@@ -2,7 +2,7 @@ import { DECK_CARD_COUNT } from './constants.ts'
 import { PUBLIC_CORE, YES_NO_OPTIONS } from './publicDeck.ts'
 import type { BeliefCard, DeckId, DeckMeta } from './types.ts'
 
-export { CHOICE_CARD_SRC } from './publicDeck.ts'
+export { CHOICE_CARD_SRC, CHOICE_FACE_SRC } from './publicDeck.ts'
 
 function withOptions(card: Omit<BeliefCard, 'options'>): BeliefCard {
   return {

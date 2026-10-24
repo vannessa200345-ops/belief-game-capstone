@@ -17,10 +17,15 @@ export const YES_NO_OPTIONS: CardOption[] = [
   { id: 'no', label: '毫無道理／NO' },
 ]
 
-/** 選擇卡圖。按鈕就係呢兩張圖，不是圖旁邊再加文字掣。 */
+/** 選擇圖。完整卡圖留底；按鈕只用裁走卡框嘅角色面。 */
 export const CHOICE_CARD_SRC = {
   yes: '/choices/yes.jpg',
   no: '/choices/no.jpg',
+} as const
+
+export const CHOICE_FACE_SRC = {
+  yes: '/choices/yes-face.jpg',
+  no: '/choices/no-face.jpg',
 } as const
 
 function coreOrder(cardId: string): number | null {
