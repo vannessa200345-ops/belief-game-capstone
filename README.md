@@ -2,12 +2,20 @@
 
 Vite + React frontend for the Belief Game Capstone room.
 
+## Play (class demo)
+
+https://vannessa200345-ops.github.io/belief-game-capstone/
+
+Vite `base` and the router `basename` are `/belief-game-capstone`. Room links and card images include that prefix. Deep links such as `/belief-game-capstone/r/ROOMCODE` rely on a `404.html` copy of `index.html`.
+
 ## Run
 
 ```bash
 npm install
 npm run dev
 ```
+
+Local dev uses the same prefix: http://localhost:43123/belief-game-capstone/
 
 ## Supabase
 
@@ -18,7 +26,7 @@ VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 ```
 
-Keep real keys in the local `.env` only. Never commit `.env` to git.
+Do not commit `.env`. The Pages workflow builds with the public anon key only. Never add a `service_role` key.
 
 ## Try the pictured decks
 

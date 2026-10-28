@@ -1,0 +1,57 @@
+# Classroom demo deploy. Build uses the public Supabase anon key only (JWT role=anon).
+# Repo secret writes are unavailable to this token. Never put a service_role key here.
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: "https://pnhbamlnlqbwodogqtjy.supabase.co"
+      VITE_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuaGJhbWxubHFid29kb2dxdGp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3MDM3NDYsImV4cCI6MjEwNzI3OTc0Nn0.t0_Qs70XWtliZLEJsvMk3BhytMbaUlD1E5kTVT_jdt4"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: SPA fallback
+        run: |
+          cp dist/index.html dist/404.html
+          touch dist/.nojekyll
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+          include-hidden-files: true
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
