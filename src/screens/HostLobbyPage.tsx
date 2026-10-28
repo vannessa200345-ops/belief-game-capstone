@@ -13,6 +13,7 @@ import { DECKS, deckMeta } from '@/domain/cards'
 import { ROOM_CAPACITY, ROOM_IDEAL } from '@/domain/constants'
 import { phaseLabel } from '@/domain/format'
 import type { DeckId } from '@/domain/types'
+import { withBase } from '@/lib/base'
 import { cn } from '@/lib/utils'
 import { usePageTitle } from '@/lib/title'
 
@@ -37,7 +38,7 @@ export function HostLobbyPage() {
   const hasRoom = state.room.code.length > 0
   const inLobby = state.room.phase === 'lobby'
 
-  const sharePath = hasRoom ? `/r/${state.room.code}` : ''
+  const sharePath = hasRoom ? withBase(`/r/${state.room.code}`) : ''
   const shareUrl = sharePath ? `${window.location.origin}${sharePath}` : ''
 
   async function copyLink() {
@@ -164,7 +165,7 @@ export function HostLobbyPage() {
                 <span className="mt-1 block text-muted">短路徑 {sharePath}</span>
               </p>
             ) : (
-              <p className="mt-4 text-sm text-muted">開出房間之後，這裡會出現 /r/房間碼。</p>
+              <p className="mt-4 text-sm text-muted">開出房間之後，這裡會出現加入連結。</p>
             )}
           </Panel>
 

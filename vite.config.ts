@@ -4,6 +4,7 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
+  base: '/belief-game-capstone/',
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {

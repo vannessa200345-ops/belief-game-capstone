@@ -1,3 +1,4 @@
+import { publicAsset } from '@/lib/base.ts'
 import { DECK_CARD_COUNT } from './constants.ts'
 import type { CardOption } from './types.ts'
 import deck from './core-public.json'
@@ -19,13 +20,13 @@ export const YES_NO_OPTIONS: CardOption[] = [
 
 /** 選擇圖。完整卡圖留底；按鈕只用裁走卡框嘅角色面。 */
 export const CHOICE_CARD_SRC = {
-  yes: '/choices/yes.jpg',
-  no: '/choices/no.jpg',
+  yes: publicAsset('/choices/yes.jpg'),
+  no: publicAsset('/choices/no.jpg'),
 } as const
 
 export const CHOICE_FACE_SRC = {
-  yes: '/choices/yes-face.jpg',
-  no: '/choices/no-face.jpg',
+  yes: publicAsset('/choices/yes-face.jpg'),
+  no: publicAsset('/choices/no-face.jpg'),
 } as const
 
 function coreOrder(cardId: string): number | null {

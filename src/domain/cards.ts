@@ -1,3 +1,4 @@
+import { publicAsset } from '@/lib/base.ts'
 import { DECK_CARD_COUNT } from './constants.ts'
 import { PUBLIC_CORE, YES_NO_OPTIONS } from './publicDeck.ts'
 import type { BeliefCard, DeckId, DeckMeta } from './types.ts'
@@ -12,7 +13,7 @@ function withOptions(card: Omit<BeliefCard, 'options'>): BeliefCard {
 }
 
 function faceSrc(deck: DeckId, number: number) {
-  return `/cards/${deck}/${String(number).padStart(2, '0')}.jpg`
+  return publicAsset(`/cards/${deck}/${String(number).padStart(2, '0')}.jpg`)
 }
 
 function picturedDeck(deck: DeckId, theme: string, label: string): BeliefCard[] {
