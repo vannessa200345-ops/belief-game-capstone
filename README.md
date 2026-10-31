@@ -46,7 +46,7 @@ npm run dev
 Without `.env`, the app uses the local mock and still grades **信念原套**.
 
 1. Open `/host`, pick 信念原套, create a room, then start.
-2. Join with the room code. Each turn shows the belief card (`public/cards/core/01.jpg` … `50.jpg`), then two Yes / No buttons. The buttons use a cropped face from the choice art (`public/choices/yes-face.jpg`, `public/choices/no-face.jpg`) and submit `yes` or `no`.
+2. Students open the host’s link (`/r/ROOMCODE`). The code comes from the link. The next screen asks only for a name. A small optional room-code field stays tucked away for the rare case with no link. Each turn shows the belief card (`public/cards/core/01.jpg` … `50.jpg`), then two Yes / No buttons. The buttons use a cropped face from the choice art (`public/choices/yes-face.jpg`, `public/choices/no-face.jpg`) and submit `yes` or `no`.
 3. Model answers live in `src/host/core-key.json`, `src/host/money-key.json`, and `src/host/relationship-key.json` (`yes` / `no`). They are not copied into the student-facing public deck JSON. When the host starts self-paced, `hostDeckPayload` loads the key for that deck.
 4. 金錢信念套 and 伴侶信念 show `public/cards/money` and `public/cards/relationship`, and they score, bar, and rank like core once the host starts.
 5. The in-room leaderboard (this session only) is on the play screen, the final screen, and the host console. It ranks by how many answers match the model key. It does not show the key or which way someone answered.
