@@ -87,14 +87,14 @@ export function ControlPage() {
           <p className="text-sm text-muted">
             {phaseLabel(state.room.phase, lang)}
             {state.room.phase === 'playing' || state.room.phase === 'paused'
-              ? tx(` · ${board.total} 句自速`, ` · ${board.total} cards, self-paced`)
+              ? tx(` · ${board.total} 句答題`, ` · ${board.total} cards to answer`)
               : null}
           </p>
         </div>
         <div className="mt-4">
           <NextStep label={tx('下一步：', 'Next: ')}>
             {state.room.phase === 'lobby'
-              ? tx('等人到齊，撳「開始自速」。卡序會喺呢一場打亂。', 'when people are in, press Start self-paced. Card order is shuffled for this room.')
+              ? tx('等人到齊，撳「開始答題」。卡序會喺呢一場打亂。', 'when people are in, press Start answering. Card order is shuffled for this room.')
               : state.room.phase === 'final'
                 ? tx('撳學員個名，打開佢嘅整理做複盤。', 'open a learner’s name to see their summary for the debrief.')
                 : tx('睇條形。撳一條柱就見到係邊張卡。學員可以傳字過嚟。', 'watch the bars. Click one to see the card. Learners can text you.')}
@@ -119,7 +119,7 @@ export function ControlPage() {
                   )}
                 </p>
                 <Button className="mt-5" onClick={() => void start()} disabled={pending != null}>
-                  {pending === 'start' ? tx('正在開始', 'Starting') : tx('開始自速', 'Start self-paced')}
+                  {pending === 'start' ? tx('正在開始', 'Starting') : tx('開始答題', 'Start answering')}
                 </Button>
               </Panel>
             ) : null}
@@ -210,7 +210,7 @@ export function ControlPage() {
                   </div>
                   {state.selfPaceLink === 'live' && waitingOnServer ? (
                     <p className="mt-3 text-sm leading-relaxed text-muted">
-                      {tx('已接上自速。選擇會陸續回到這裡。', 'Self-paced is connected. Choices will show up here.')}
+                      {tx('已經可以答題。選擇會陸續回到這裡。', 'Answering is connected. Choices will show up here.')}
                     </p>
                   ) : null}
                 </Panel>

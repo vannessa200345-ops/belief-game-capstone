@@ -37,7 +37,7 @@ export function LobbyPage() {
         </h1>
         <div className="mt-4">
           <NextStep label={tx('下一步：', 'Next: ')}>
-            {tx('等主持撳「開始自速」。你唔使做其他嘢。', 'wait for the host to press Start self-paced. You do not need to do anything else.')}
+            {tx('等主持撳「開始答題」。你唔使做其他嘢。', 'wait for the host to press Start answering. You do not need to do anything else.')}
           </NextStep>
         </div>
 

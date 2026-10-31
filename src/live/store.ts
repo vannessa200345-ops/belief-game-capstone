@@ -480,7 +480,7 @@ export async function endRoom(): Promise<ActionResult> {
 }
 
 export async function revealRound(): Promise<ActionResult> {
-  return { ok: false, error: '這一場是自速，不用逐張揭示。' }
+  return { ok: false, error: tx('呢一場唔使逐張揭示，學員會自己答。', 'This session does not reveal cards one by one. Learners answer on their own.') }
 }
 
 export async function nextRound(): Promise<ActionResult> {

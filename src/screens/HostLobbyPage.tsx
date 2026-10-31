@@ -98,7 +98,7 @@ export function HostLobbyPage() {
   const nextCopy = !hasRoom
     ? tx('揀一套牌，撳「開出房間碼」。', 'pick a deck, then press Open a room code.')
     : inLobby
-      ? tx('複製加入連結俾學員，等佢哋入房，然後撳「開始自速」。', 'copy the join link for learners, then press Start self-paced.')
+      ? tx('複製加入連結俾學員，等佢哋入房，然後撳「開始答題」。', 'copy the join link for learners, then press Start answering.')
       : tx('撳「回到主持台」睇進度。', 'press Back to the console to see progress.')
 
   return (
@@ -150,7 +150,7 @@ export function HostLobbyPage() {
               </Button>
               {hasRoom && inLobby ? (
                 <Button onClick={() => void start()} disabled={pending != null}>
-                  {pending === 'start' ? tx('正在開始', 'Starting') : tx('開始自速', 'Start self-paced')}
+                  {pending === 'start' ? tx('正在開始', 'Starting') : tx('開始答題', 'Start answering')}
                 </Button>
               ) : null}
               {hasRoom && !inLobby ? (
