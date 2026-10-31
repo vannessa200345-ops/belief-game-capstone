@@ -33,6 +33,8 @@ export interface BeliefApi {
     timeMs: number
   }): Promise<SelfPaceSubmitResult>
   requestSpeak(): Promise<ActionResult>
+  /** 學員傳字俾主持。唔使開咪，亦唔會發電郵。 */
+  sendNote(text: string, fromHost?: boolean): Promise<ActionResult>
   lowerHand(): Promise<ActionResult>
   clearSpeakQueue(): Promise<ActionResult>
   pauseRoom(): Promise<ActionResult>

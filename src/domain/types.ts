@@ -16,7 +16,9 @@ export interface BeliefCard {
   id: string
   deck: DeckId
   theme: string
+  themeEn: string
   text: string
+  textEn: string
   /** 圖卡路徑，例如 /cards/core/01.jpg。文句留作 alt。 */
   imageSrc: string
   options: CardOption[]
@@ -25,7 +27,18 @@ export interface BeliefCard {
 export interface DeckMeta {
   id: DeckId
   name: string
+  nameEn: string
   note: string
+  noteEn: string
+}
+
+export interface RoomNote {
+  id: string
+  playerId: string
+  name: string
+  text: string
+  at: number
+  fromHost: boolean
 }
 
 export interface Player {
@@ -102,6 +115,8 @@ export interface GameState {
   botPlans: BotPlan[]
   /** 留下電郵的人。離開座位後仍保留，直到另開一場。 */
   notices: SessionNotice[]
+  /** 這一場嘅文字訊息。唔係電郵，亦唔使開咪。 */
+  notes: RoomNote[]
   connection: Connection
   /** 這一頁探測到的自速 RPC。不寫入房間，刷新後再探。 */
   selfPaceLink: SelfPaceLink

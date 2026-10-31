@@ -1,4 +1,5 @@
 import { cardAt, cardsFor, deckHasAnswerKey, findCard } from './cards.ts'
+import { playOrder } from './order.ts'
 import { MAX_ATTENTION, SLOW_MS } from './constants.ts'
 import type {
   AnalyticsSnapshot,
@@ -149,7 +150,7 @@ export function selectAnalytics(state: GameState): AnalyticsSnapshot {
       ...state.timeouts.filter((mark) => mark.cardId === card.id).map((mark) => mark.playerId),
     ])
     const missed = state.players.filter((player) => player.connected && !touched.has(player.id)).length
-    const denom = correct + wrong + timeout
+    const denom = correct + wrong
     return {
       cardId: card.id,
       theme: card.theme,
@@ -164,8 +165,7 @@ export function selectAnalytics(state: GameState): AnalyticsSnapshot {
   })
 
   cards.sort((a, b) => {
-    const trouble = b.wrong + b.timeout - (a.wrong + a.timeout)
-    if (trouble !== 0) return trouble
+    if (b.wrong !== a.wrong) return b.wrong - a.wrong
     return b.missed - a.missed
   })
 
@@ -197,8 +197,10 @@ export function selectAnalytics(state: GameState): AnalyticsSnapshot {
   })
 
   players.sort((a, b) => {
-    if (b.timeoutCount !== a.timeoutCount) return b.timeoutCount - a.timeoutCount
     if (b.missedCount !== a.missedCount) return b.missedCount - a.missedCount
+    const aMs = a.avgMs ?? -1
+    const bMs = b.avgMs ?? -1
+    if (bMs !== aMs) return bMs - aMs
     return a.name.localeCompare(b.name, 'zh-Hant')
   })
 
@@ -390,7 +392,7 @@ export interface CardWaveSnapshot {
  * yours 只覆蓋你自己，等交答後條形可以先郁，其他人靠房間紀錄。
  */
 export function selectCardWaves(state: GameState, yours?: PaceGrade[]): CardWaveSnapshot {
-  const cards = cardsFor(state.room.deck)
+  const cards = playOrder(state.room.deck, state.room.code)
   if (!deckHasAnswerKey(state.room.deck)) return { keyed: false, bars: [], peak: 1 }
 
   const cell = new Map<string, Map<string, boolean>>()
