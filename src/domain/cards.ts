@@ -1,5 +1,7 @@
 import { publicAsset } from '@/lib/base.ts'
+import { CARD_EN } from './cardEn.ts'
 import { DECK_CARD_COUNT } from './constants.ts'
+import { MONEY_ZH, RELATIONSHIP_ZH } from './deckText.ts'
 import { PUBLIC_CORE, YES_NO_OPTIONS } from './publicDeck.ts'
 import type { BeliefCard, DeckId, DeckMeta } from './types.ts'
 
@@ -16,14 +18,30 @@ function faceSrc(deck: DeckId, number: number) {
   return publicAsset(`/cards/${deck}/${String(number).padStart(2, '0')}.jpg`)
 }
 
-function picturedDeck(deck: DeckId, theme: string, label: string): BeliefCard[] {
+function textEn(id: string, zh: string) {
+  const english = CARD_EN[id]
+  if (!english) throw new Error(`missing English card text for ${id}`)
+  return english.length > 0 ? english : zh
+}
+
+function picturedDeck(
+  deck: DeckId,
+  theme: string,
+  themeEn: string,
+  texts: Record<string, string>,
+): BeliefCard[] {
   return Array.from({ length: DECK_CARD_COUNT }, (_, index) => {
     const number = index + 1
+    const id = `${deck}-${number}`
+    const text = texts[id]
+    if (!text) throw new Error(`missing card text for ${id}`)
     return withOptions({
-      id: `${deck}-${number}`,
+      id,
       deck,
       theme,
-      text: `${label}第 ${number} 張`,
+      themeEn,
+      text,
+      textEn: textEn(id, text),
       imageSrc: faceSrc(deck, number),
     })
   })
@@ -34,18 +52,15 @@ const CORE_CARDS: BeliefCard[] = PUBLIC_CORE.map((card, index) =>
     id: card.id,
     deck: 'core',
     theme: '信念',
+    themeEn: 'Belief',
     text: card.text,
+    textEn: textEn(card.id, card.text),
     imageSrc: faceSrc('core', index + 1),
   }),
 )
 
-/**
- * TODO(money): 金錢信念套未有 src/host 答案 key，亦未有公開文句。
- * 先顯示 /cards/money/01.jpg…50.jpg，不要在這裡寫正確方向。
- * TODO(relationship): 伴侶信念同上，圖在 /cards/relationship/。
- */
-const MONEY_CARDS = picturedDeck('money', '金錢', '金錢信念')
-const RELATIONSHIP_CARDS = picturedDeck('relationship', '伴侶', '伴侶信念')
+const MONEY_CARDS = picturedDeck('money', '金錢', 'Money', MONEY_ZH)
+const RELATIONSHIP_CARDS = picturedDeck('relationship', '伴侶', 'Relationship', RELATIONSHIP_ZH)
 
 const BY_DECK: Record<DeckId, BeliefCard[]> = {
   core: CORE_CARDS,
@@ -55,23 +70,36 @@ const BY_DECK: Record<DeckId, BeliefCard[]> = {
 
 export const CARDS: BeliefCard[] = CORE_CARDS
 
+const scoredNote = '這一場50張，每張選是或毫無道理。主持開始之後會計分。'
+const scoredNoteEn = '50 cards this session. Choose Yes or No on each. Scoring starts when the host begins.'
+
 export const DECKS: DeckMeta[] = [
-  { id: 'core', name: '信念原套', note: `這一場${CORE_CARDS.length}張，每張選是或毫無道理。` },
+  {
+    id: 'core',
+    name: '信念原套',
+    nameEn: 'Core beliefs',
+    note: scoredNote,
+    noteEn: scoredNoteEn,
+  },
   {
     id: 'money',
     name: '金錢信念套',
-    note: `這一場${DECK_CARD_COUNT}張圖卡。參考答案未放入，暫時不計分。`,
+    nameEn: 'Money beliefs',
+    note: scoredNote,
+    noteEn: scoredNoteEn,
   },
   {
     id: 'relationship',
     name: '伴侶信念',
-    note: `這一場${DECK_CARD_COUNT}張圖卡。參考答案未放入，暫時不計分。`,
+    nameEn: 'Relationship beliefs',
+    note: scoredNote,
+    noteEn: scoredNoteEn,
   },
 ]
 
-/** 只有信念原套有主持答案。金錢、伴侶 key 未進 repo 時不要當成已可計分。 */
+/** 三套都有主持答案。學員畫面唔讀 key，只睇伺服器或主持計分返嚟嘅對錯。 */
 export function deckHasAnswerKey(id: DeckId): boolean {
-  return id === 'core'
+  return id === 'core' || id === 'money' || id === 'relationship'
 }
 
 export function deckMeta(id: DeckId): DeckMeta {
@@ -95,7 +123,17 @@ export function findCard(id: string): BeliefCard | null {
   return null
 }
 
-export function optionLabel(cardItem: BeliefCard, optionId: string | null): string {
-  if (!optionId) return '尚未選擇'
-  return cardItem.options.find((option) => option.id === optionId)?.label ?? '尚未選擇'
+export function cardLine(card: BeliefCard, lang: 'zh' | 'en'): string {
+  return lang === 'en' ? card.textEn : card.text
+}
+
+export function cardTheme(card: BeliefCard, lang: 'zh' | 'en'): string {
+  return lang === 'en' ? card.themeEn : card.theme
+}
+
+export function optionLabel(cardItem: BeliefCard, optionId: string | null, lang: 'zh' | 'en' = 'zh'): string {
+  if (!optionId) return lang === 'en' ? 'Not chosen yet' : '尚未選擇'
+  if (optionId === 'yes') return lang === 'en' ? 'Yes' : '是'
+  if (optionId === 'no') return lang === 'en' ? 'No' : '毫無道理'
+  return cardItem.options.find((option) => option.id === optionId)?.label ?? (lang === 'en' ? 'Not chosen yet' : '尚未選擇')
 }

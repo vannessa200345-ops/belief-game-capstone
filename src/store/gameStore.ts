@@ -8,6 +8,7 @@ import {
   STORAGE_KEY,
 } from '../domain/constants.ts'
 import { parseNoticeEmail } from '../domain/email.ts'
+import { tx } from '../i18n/text.ts'
 import { parseDisplayName } from '../domain/name.ts'
 import type {
   BeliefCard,
@@ -15,11 +16,13 @@ import type {
   Connection,
   DeckId,
   GameState,
+  ActionResult,
   JoinResult,
   NoticeEmailResult,
   PersistedState,
   Player,
   Room,
+  RoomNote,
 } from '../domain/types.ts'
 
 const LOCK = 'belief-game-mvp'
@@ -86,6 +89,7 @@ function createSeed(code: string, deck: DeckId): PersistedState {
     called: null,
     botPlans: [],
     notices: [],
+    notes: [],
     remoteAnswered: {},
     serverAnswerCount: 0,
   }
@@ -95,6 +99,7 @@ function hydrate(state: PersistedState): PersistedState {
   return {
     ...state,
     notices: Array.isArray(state.notices) ? state.notices : [],
+    notes: Array.isArray(state.notes) ? state.notes : [],
     remoteAnswered: state.remoteAnswered ?? {},
     serverAnswerCount: state.serverAnswerCount ?? 0,
     players: state.players.map((player) => ({
@@ -383,6 +388,7 @@ export async function createRoom(deck: DeckId) {
     draft.called = null
     draft.botPlans = []
     draft.notices = []
+    draft.notes = []
     return true
   })
   return { ok: true as const }
@@ -402,13 +408,13 @@ function rememberNotice(draft: PersistedState, name: string, email: string) {
 }
 
 export async function joinRoom(input: { code: string; name: string; email?: string }): Promise<JoinResult> {
-  let result: JoinResult = { ok: false, error: '暫時未能進入。請再試一次。' }
+  let result: JoinResult = { ok: false, error: tx('暫時未能進入。請再試一次。', 'Could not enter. Try again.') }
   await commit((draft) => {
     const cleanedCode = input.code.trim().toUpperCase()
     const display = parseDisplayName(input.name)
     const notice = parseNoticeEmail(input.email ?? '')
     if (!cleanedCode) {
-      result = { ok: false, error: '請輸入房間碼。' }
+      result = { ok: false, error: tx('請輸入房間碼。', 'Enter a room code.') }
       return false
     }
     if (!display.ok) {
@@ -421,7 +427,7 @@ export async function joinRoom(input: { code: string; name: string; email?: stri
       return false
     }
     if (cleanedCode !== draft.room.code) {
-      result = { ok: false, error: '找不到這個房間。請再對一次房間碼。' }
+      result = { ok: false, error: tx('找不到這個房間。請再對一次房間碼。', 'That room was not found. Check the room code.') }
       return false
     }
     if (draft.youId && draft.players.some((player) => player.id === draft.youId)) {
@@ -429,7 +435,7 @@ export async function joinRoom(input: { code: string; name: string; email?: stri
       return false
     }
     if (draft.players.length >= ROOM_CAPACITY) {
-      result = { ok: false, error: '這個房間已滿三十人。' }
+      result = { ok: false, error: tx('這個房間已滿三十人。', 'This room is full at thirty people.') }
       return false
     }
     const player: Player = {
@@ -618,6 +624,35 @@ export async function pauseRoom() {
     return true
   })
   return { ok: true as const }
+}
+
+export async function sendNote(text: string, fromHost = false): Promise<ActionResult> {
+  const cleaned = text.trim().slice(0, 240)
+  if (!cleaned) return { ok: false, error: tx('請先寫一句。', 'Write a line first.') }
+  let result: ActionResult = { ok: false, error: tx('而家仲未可以傳字。', 'You cannot text yet.') }
+  await commit((draft) => {
+    const phase = draft.room.phase
+    if (phase !== 'playing' && phase !== 'paused' && phase !== 'final') return false
+    const you = draft.players.find((player) => player.id === draft.youId)
+    if (!you && !fromHost) {
+      result = { ok: false, error: tx('你還沒有進入房間。', 'You are not in the room yet.') }
+      return false
+    }
+    const host = Boolean(fromHost || you?.host)
+    const note: RoomNote = {
+      id: uid('note'),
+      playerId: you?.id ?? `host-${draft.room.code}`,
+      name: host ? (you?.host ? you.name : '主持') : (you?.name ?? '學員'),
+      text: cleaned,
+      at: Date.now(),
+      fromHost: host,
+    }
+    if (!Array.isArray(draft.notes)) draft.notes = []
+    draft.notes.push(note)
+    result = { ok: true }
+    return true
+  })
+  return result
 }
 
 export async function requestSpeak() {
