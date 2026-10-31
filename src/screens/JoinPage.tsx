@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useRef, useState, type FormEvent } from 'react'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api } from '@/api'
 import { BrandMark } from '@/components/BrandMark'
 import { Frame } from '@/components/Frame'
@@ -13,15 +13,25 @@ function cleanCode(value: string) {
   return value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8)
 }
 
+function codeFromPaste(value: string) {
+  const trimmed = value.trim()
+  const fromLink = trimmed.match(/\/r\/([A-Za-z0-9]{2,8})/i)
+  if (fromLink?.[1]) return cleanCode(fromLink[1])
+  if (trimmed.includes('/') || /^https?:/i.test(trimmed)) return ''
+  return cleanCode(trimmed)
+}
+
 export function JoinPage() {
   const { tx } = useLang()
   const params = useParams()
+  const location = useLocation()
   const inviteCode = cleanCode(params.code ?? '')
-  const [step, setStep] = useState<'arrive' | 'name'>('arrive')
+  const openName = (location.state as { step?: string } | null)?.step === 'name'
+  const [step, setStep] = useState<'arrive' | 'name'>(openName && inviteCode ? 'name' : 'arrive')
   const [stepCode, setStepCode] = useState(inviteCode)
   if (stepCode !== inviteCode) {
     setStepCode(inviteCode)
-    setStep('arrive')
+    setStep(openName && inviteCode ? 'name' : 'arrive')
   }
   usePageTitle(tx('信念遊戲 · 進入房間', 'Belief Game · Enter'))
 
@@ -71,31 +81,12 @@ function ArriveStep({ inviteCode, onEnter }: { inviteCode: string; onEnter: () =
             </Button>
           </>
         ) : (
-          <>
-            <h1 className="mt-10 text-[1.85rem] font-medium leading-snug text-ink">
-              {tx('用主持俾你嘅連結打開', 'Open the link from the host')}
-            </h1>
-            <p className="mt-3 text-base leading-relaxed text-muted">
-              {tx('連結已經有房間碼。打開就到，唔使自己打一串碼。', 'The link already has the room code. Open it. You do not need to type the code.')}
-            </p>
-            <div className="mt-6">
-              <NextStep label={tx('下一步：', 'Next: ')}>
-                {tx('打開主持複製俾你嘅連結。', 'open the link the host copied for you.')}
-              </NextStep>
-            </div>
-          </>
+          <HomeContinue />
         )}
 
-        <p className="mt-6 text-sm leading-relaxed text-muted">
-          {tx(
-            '人數大約二十人最剛好，最多三十人。視像會議請另開 Zoom 或 Meet。這裡只負責看卡、作答，以及傳字俾主持。',
-            'About twenty people is ideal, thirty is the maximum. Keep video on Zoom or Meet. This room is for the cards, your choices, and text to the host.',
-          )}
-        </p>
-        <QuietCode
-          label={inviteCode ? tx('唔係呢間房？', 'Not this room?') : tx('冇連結，只有房間碼', 'No link, only a room code')}
-          onCode={useManualCode}
-        />
+        {inviteCode ? (
+          <QuietCode label={tx('唔係呢間房？', 'Not this room?')} onCode={useManualCode} />
+        ) : null}
         <p className="mt-8">
           <Link to="/host" className="text-sm text-muted underline decoration-line underline-offset-4 hover:text-ink">
             {tx('我是主持', 'I am the host')}
@@ -103,6 +94,81 @@ function ArriveStep({ inviteCode, onEnter }: { inviteCode: string; onEnter: () =
         </p>
       </main>
     </Frame>
+  )
+}
+
+function HomeContinue() {
+  const { tx } = useLang()
+  const navigate = useNavigate()
+  const field = useRef<HTMLInputElement>(null)
+  const [paste, setPaste] = useState('')
+  const [open, setOpen] = useState(false)
+  const [hint, setHint] = useState<string | null>(null)
+
+  function enter() {
+    const code = codeFromPaste(paste)
+    if (!code) {
+      setOpen(true)
+      setHint(tx('貼上連結，或者房間碼。', 'Paste the link, or a room code.'))
+      window.setTimeout(() => field.current?.focus(), 0)
+      return
+    }
+    navigate(`/r/${code}`, { state: { step: 'name' } })
+  }
+
+  return (
+    <>
+      <h1 className="mt-10 text-[1.85rem] font-medium leading-snug text-ink">
+        {tx('用卡片，練習看清楚自己的信念', 'Use the cards to see your beliefs more clearly')}
+      </h1>
+      <Button
+        type="button"
+        className="mt-8 h-[4.5rem] w-full rounded-full bg-[#ef5b45] text-lg tracking-wide text-white shadow-[0_14px_30px_rgba(239,91,69,0.28)] hover:bg-[#e14e38]"
+        onClick={enter}
+      >
+        {tx('進入房間', 'Enter the room')}
+      </Button>
+      {open ? (
+        <form
+          className="mt-4"
+          onSubmit={(event) => {
+            event.preventDefault()
+            enter()
+          }}
+        >
+          <label className="block">
+            <span className="text-xs text-muted">{tx('連結或房間碼', 'Link or room code')}</span>
+            <Input
+              ref={field}
+              className="mt-1 h-9 px-3 text-sm"
+              value={paste}
+              onChange={(event) => {
+                setPaste(event.target.value)
+                setHint(null)
+              }}
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
+              autoComplete="off"
+              placeholder={tx('貼上連結', 'Paste a link')}
+              aria-label={tx('連結或房間碼', 'Link or room code')}
+            />
+          </label>
+          {hint ? <p className="mt-2 text-sm text-ink">{hint}</p> : null}
+        </form>
+      ) : (
+        <button
+          type="button"
+          className="mt-4 text-sm text-muted underline decoration-line underline-offset-4 hover:text-ink"
+          onClick={() => {
+            setOpen(true)
+            window.setTimeout(() => field.current?.focus(), 0)
+          }}
+        >
+          {tx('貼上連結', 'Paste a link')}
+        </button>
+      )}
+    </>
   )
 }
 
