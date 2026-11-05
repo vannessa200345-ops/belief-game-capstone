@@ -99,6 +99,7 @@ export function mapLobby(
       })),
     called,
     botPlans: [],
+    notes: [],
     notices: you.email
       ? [{ id: 'you-notice', name: you.display_name, email: you.email, at: Date.now() }]
       : [],

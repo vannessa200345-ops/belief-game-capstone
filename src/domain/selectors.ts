@@ -1,4 +1,5 @@
 import { cardAt, cardsFor, deckHasAnswerKey, findCard } from './cards.ts'
+import { playOrder } from './order.ts'
 import { MAX_ATTENTION, SLOW_MS } from './constants.ts'
 import type {
   AnalyticsSnapshot,
@@ -149,7 +150,7 @@ export function selectAnalytics(state: GameState): AnalyticsSnapshot {
       ...state.timeouts.filter((mark) => mark.cardId === card.id).map((mark) => mark.playerId),
     ])
     const missed = state.players.filter((player) => player.connected && !touched.has(player.id)).length
-    const denom = correct + wrong + timeout
+    const denom = correct + wrong
     return {
       cardId: card.id,
       theme: card.theme,
@@ -164,8 +165,7 @@ export function selectAnalytics(state: GameState): AnalyticsSnapshot {
   })
 
   cards.sort((a, b) => {
-    const trouble = b.wrong + b.timeout - (a.wrong + a.timeout)
-    if (trouble !== 0) return trouble
+    if (b.wrong !== a.wrong) return b.wrong - a.wrong
     return b.missed - a.missed
   })
 
@@ -197,8 +197,10 @@ export function selectAnalytics(state: GameState): AnalyticsSnapshot {
   })
 
   players.sort((a, b) => {
-    if (b.timeoutCount !== a.timeoutCount) return b.timeoutCount - a.timeoutCount
     if (b.missedCount !== a.missedCount) return b.missedCount - a.missedCount
+    const aMs = a.avgMs ?? -1
+    const bMs = b.avgMs ?? -1
+    if (bMs !== aMs) return bMs - aMs
     return a.name.localeCompare(b.name, 'zh-Hant')
   })
 
@@ -390,7 +392,7 @@ export interface CardWaveSnapshot {
  * yours 只覆蓋你自己，等交答後條形可以先郁，其他人靠房間紀錄。
  */
 export function selectCardWaves(state: GameState, yours?: PaceGrade[]): CardWaveSnapshot {
-  const cards = cardsFor(state.room.deck)
+  const cards = playOrder(state.room.deck, state.room.code)
   if (!deckHasAnswerKey(state.room.deck)) return { keyed: false, bars: [], peak: 1 }
 
   const cell = new Map<string, Map<string, boolean>>()
@@ -419,4 +421,151 @@ export function selectCardWaves(state: GameState, yours?: PaceGrade[]): CardWave
   })
   const peak = bars.reduce((max, bar) => Math.max(max, bar.correct, bar.wrong), 1)
   return { keyed: true, bars, peak }
+}
+
+export interface CardAnswerRow {
+  playerId: string
+  name: string
+  left: boolean
+  demo: boolean
+  optionId: string
+  /** null：有選擇，但還沒同參考方向核對。 */
+  correct: boolean | null
+  seconds: number
+  /** 呢張入面用時最短。至少兩個人、而且秒數有分別先會標。 */
+  fastest: boolean
+  /** 呢張入面用時最長。同最快一樣，唔會扣分。 */
+  slowest: boolean
+}
+
+/**
+ * 呢一張卡、呢一場嘅逐人紀錄。用已儲存嘅選擇、核對同用時，不再計一次分。
+ * 未作答嘅人不入表。次序由用時短到長。
+ */
+export function selectCardAnswers(state: GameState, cardId: string): CardAnswerRow[] {
+  const latest = new Map<string, { optionId: string; correct: boolean | null; ms: number }>()
+  for (const answer of state.answers) {
+    if (answer.cardId !== cardId) continue
+    latest.set(answer.playerId, {
+      optionId: answer.optionId,
+      correct: answer.correct,
+      ms: answer.ms,
+    })
+  }
+
+  const rows: CardAnswerRow[] = []
+  for (const [playerId, answer] of latest) {
+    const player = state.players.find((item) => item.id === playerId)
+    rows.push({
+      playerId,
+      name: player?.name ?? '',
+      left: !player,
+      demo: player?.demo ?? false,
+      optionId: answer.optionId,
+      correct: answer.correct,
+      seconds: Math.max(0, Math.round(answer.ms / 1000)),
+      fastest: false,
+      slowest: false,
+    })
+  }
+
+  const min = rows.reduce((low, row) => Math.min(low, row.seconds), Number.POSITIVE_INFINITY)
+  const max = rows.reduce((high, row) => Math.max(high, row.seconds), Number.NEGATIVE_INFINITY)
+  const comparable = rows.length >= 2 && min !== max
+  if (comparable) {
+    for (const row of rows) {
+      row.fastest = row.seconds === min
+      row.slowest = row.seconds === max
+    }
+  }
+  rows.sort((a, b) => a.seconds - b.seconds || a.name.localeCompare(b.name, 'zh-Hant'))
+  return rows
+}
+
+export interface TimedPoint {
+  id: string
+  name: string
+  left: boolean
+  /** 卡嘅話係呢一場打亂後嘅次序。人就係 0。 */
+  number: number
+  avgSeconds: number
+  answers: number
+}
+
+export interface SessionTimeGlance {
+  shortestCard: TimedPoint | null
+  longestCard: TimedPoint | null
+  fastestPerson: TimedPoint | null
+  slowestPerson: TimedPoint | null
+  cardsWithTime: number
+  peopleWithTime: number
+}
+
+function averageSeconds(values: number[]): number {
+  const total = values.reduce((sum, value) => sum + value, 0)
+  return Math.max(0, Math.round(total / values.length / 1000))
+}
+
+/**
+ * 呢一場用時概覽。最短係最有把握，最長係最猶豫。
+ * 只用呢場已儲存嘅每張用時，唔讀其他場，亦唔當係扣分。
+ */
+export function selectSessionTime(state: GameState): SessionTimeGlance {
+  const order = playOrder(state.room.deck, state.room.code)
+  const byCard = new Map<string, number[]>()
+  const byPerson = new Map<string, number[]>()
+  for (const answer of state.answers) {
+    const cardTimes = byCard.get(answer.cardId) ?? []
+    cardTimes.push(answer.ms)
+    byCard.set(answer.cardId, cardTimes)
+    const personTimes = byPerson.get(answer.playerId) ?? []
+    personTimes.push(answer.ms)
+    byPerson.set(answer.playerId, personTimes)
+  }
+
+  const cards: TimedPoint[] = []
+  order.forEach((card, index) => {
+    const times = byCard.get(card.id)
+    if (!times || times.length === 0) return
+    cards.push({
+      id: card.id,
+      name: '',
+      left: false,
+      number: index + 1,
+      avgSeconds: averageSeconds(times),
+      answers: times.length,
+    })
+  })
+
+  const people: TimedPoint[] = []
+  for (const [playerId, times] of byPerson) {
+    const player = state.players.find((item) => item.id === playerId)
+    people.push({
+      id: playerId,
+      name: player?.name ?? '',
+      left: !player,
+      number: 0,
+      avgSeconds: averageSeconds(times),
+      answers: times.length,
+    })
+  }
+
+  return {
+    shortestCard: extreme(cards, 'min'),
+    longestCard: extreme(cards, 'max'),
+    fastestPerson: extreme(people, 'min'),
+    slowestPerson: extreme(people, 'max'),
+    cardsWithTime: cards.length,
+    peopleWithTime: people.length,
+  }
+}
+
+function extreme(points: TimedPoint[], which: 'min' | 'max'): TimedPoint | null {
+  if (points.length < 2) return null
+  const seconds = points.map((point) => point.avgSeconds)
+  const target = which === 'min' ? Math.min(...seconds) : Math.max(...seconds)
+  if (Math.min(...seconds) === Math.max(...seconds)) return null
+  const tied = points.filter((point) => point.avgSeconds === target)
+  tied.sort((a, b) => a.number - b.number || a.name.localeCompare(b.name, 'zh-Hant'))
+  return tied[0] ?? null
 }

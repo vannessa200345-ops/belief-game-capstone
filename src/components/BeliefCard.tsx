@@ -6,12 +6,14 @@ export function BeliefCard({
   text,
   imageSrc,
   kicker,
+  caption,
   compact = false,
 }: {
   theme: string
   text: string
   imageSrc?: string
   kicker?: string
+  caption?: string
   compact?: boolean
 }) {
   const [broken, setBroken] = useState(false)
@@ -25,7 +27,10 @@ export function BeliefCard({
         <p className={cn('text-sm tracking-wide text-muted', kicker && 'mt-3')}>{theme}</p>
       </div>
       {showImage ? (
-        <img src={imageSrc} alt={text} className="block w-full bg-white object-contain" onError={() => setBroken(true)} />
+        <>
+          <img src={imageSrc} alt={text} className="block w-full bg-white object-contain" onError={() => setBroken(true)} />
+          {caption ? <p className="px-6 py-4 text-base leading-relaxed text-ink">{caption}</p> : null}
+        </>
       ) : (
         <div className={cn(compact ? 'px-5 pb-5' : 'px-6 pb-7 sm:px-7')}>
           <div className="h-px w-8 bg-gold" aria-hidden="true" />

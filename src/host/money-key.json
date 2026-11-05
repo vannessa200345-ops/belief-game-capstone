@@ -1,0 +1,205 @@
+{
+  "deck": "money",
+  "cards": [
+    {
+      "card_id": "money-1",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-2",
+      "correct": "yes"
+    },
+    {
+      "card_id": "money-3",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-4",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-5",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-6",
+      "correct": "yes"
+    },
+    {
+      "card_id": "money-7",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-8",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-9",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-10",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-11",
+      "correct": "yes"
+    },
+    {
+      "card_id": "money-12",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-13",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-14",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-15",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-16",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-17",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-18",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-19",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-20",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-21",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-22",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-23",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-24",
+      "correct": "yes"
+    },
+    {
+      "card_id": "money-25",
+      "correct": "yes"
+    },
+    {
+      "card_id": "money-26",
+      "correct": "yes"
+    },
+    {
+      "card_id": "money-27",
+      "correct": "yes"
+    },
+    {
+      "card_id": "money-28",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-29",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-30",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-31",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-32",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-33",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-34",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-35",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-36",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-37",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-38",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-39",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-40",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-41",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-42",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-43",
+      "correct": "yes"
+    },
+    {
+      "card_id": "money-44",
+      "correct": "yes"
+    },
+    {
+      "card_id": "money-45",
+      "correct": "yes"
+    },
+    {
+      "card_id": "money-46",
+      "correct": "yes"
+    },
+    {
+      "card_id": "money-47",
+      "correct": "yes"
+    },
+    {
+      "card_id": "money-48",
+      "correct": "no"
+    },
+    {
+      "card_id": "money-49",
+      "correct": "yes"
+    },
+    {
+      "card_id": "money-50",
+      "correct": "yes"
+    }
+  ]
+}

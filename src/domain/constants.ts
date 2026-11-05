@@ -1,7 +1,7 @@
 export const ROOM_IDEAL = 20
 export const ROOM_CAPACITY = 30
 export const DEMO_ROOM_CODE = 'A4K9'
-/** 真人停久了才列入「需要留意」。示範學員的停住／逾時是開輪時就標好的。 */
+/** 真人停得較耐先列入「需要留意」。示範學員嘅停住係開輪時就標好，只係時間紀錄，唔會扣分。 */
 export const SLOW_MS = 20_000
 export const MAX_ATTENTION = 8
 export const STORAGE_KEY = 'belief-mvp-v1'

@@ -1,4 +1,7 @@
-/** 暫定分階，只供個人整理顯示。房內排名另計答中題數。 */
+/**
+ * 分階顏色未有產品決定，畫面唔好呼叫。
+ * 房內排名只計呢一場答中題數。
+ */
 export function scoreTier(correct: number, total: number): string | null {
   if (total <= 0) return null
   const ratio = correct / total

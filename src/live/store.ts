@@ -9,11 +9,13 @@ import type {
   JoinResult,
   NoticeEmailResult,
   PersistedState,
+  RoomNote,
 } from '../domain/types.ts'
 import { liveBackend } from '../lib/env.ts'
 import { ensureAnonymousSession, getSupabase } from '../lib/supabase.ts'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { clearPace } from '../self/pace.ts'
+import { tx } from '../i18n/text.ts'
 import { explain } from './errors.ts'
 import { mapLobby } from './mapLobby.ts'
 import type { CardEventRow, LobbySnapshot, SpeakDequeue } from './types.ts'
@@ -39,6 +41,7 @@ const emptyState: PersistedState = {
   called: null,
   botPlans: [],
   notices: [],
+  notes: [],
   remoteAnswered: {},
   serverAnswerCount: 0,
 }
@@ -54,6 +57,8 @@ const listeners = new Set<() => void>()
 let refreshChain: Promise<void> = Promise.resolve()
 let roomChannel: RealtimeChannel | null = null
 let cardChannel: RealtimeChannel | null = null
+let noteChannel: RealtimeChannel | null = null
+let roomNotes: RoomNote[] = []
 let selfPaceRpc: 'unknown' | 'live' | 'missing' = 'unknown'
 let remoteAnswered: Record<string, number> = {}
 let playingSince: number | null = null
@@ -100,8 +105,63 @@ function readIsCorrect(data: unknown): boolean | null {
 }
 
 function publish() {
-  snapshot = { ...memory, connection, called, selfPaceLink: selfPaceRpc }
+  snapshot = { ...memory, notes: roomNotes, connection, called, selfPaceLink: selfPaceRpc }
   for (const listener of listeners) listener()
+}
+
+function notesStorageKey(id: string) {
+  return `belief-notes:${id}`
+}
+
+function readNotes(id: string): RoomNote[] {
+  try {
+    const raw = sessionStorage.getItem(notesStorageKey(id))
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as RoomNote[]
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter((note) => note && typeof note.id === 'string' && typeof note.text === 'string')
+  } catch {
+    return []
+  }
+}
+
+function writeNotes(id: string) {
+  try {
+    sessionStorage.setItem(notesStorageKey(id), JSON.stringify(roomNotes))
+  } catch {
+    /* 自己畫面仍然留住剛送出嘅字。 */
+  }
+}
+
+function rememberNote(note: RoomNote) {
+  if (roomNotes.some((item) => item.id === note.id)) return
+  roomNotes = [...roomNotes, note].slice(-80)
+  if (roomId) writeNotes(roomId)
+  publish()
+}
+
+function bindNotes(id: string | null) {
+  const supabase = getSupabase()
+  if (noteChannel) {
+    void supabase.removeChannel(noteChannel)
+    noteChannel = null
+  }
+  if (!id) return
+  noteChannel = supabase
+    .channel(`room-notes:${id}`, { config: { broadcast: { self: false } } })
+    .on('broadcast', { event: 'note' }, ({ payload }) => {
+      const note = payload as RoomNote
+      if (!note || typeof note.id !== 'string' || typeof note.text !== 'string') return
+      rememberNote({
+        id: note.id,
+        playerId: typeof note.playerId === 'string' ? note.playerId : 'guest',
+        name: typeof note.name === 'string' ? note.name : '學員',
+        text: note.text.slice(0, 240),
+        at: typeof note.at === 'number' ? note.at : Date.now(),
+        fromHost: Boolean(note.fromHost),
+      })
+    })
+    .subscribe()
 }
 
 function readDeck(): DeckId {
@@ -111,10 +171,13 @@ function readDeck(): DeckId {
 }
 
 function rememberRoom(id: string | null) {
+  const changed = id !== roomId
   roomId = id
   if (id) sessionStorage.setItem(ROOM_KEY, id)
   else sessionStorage.removeItem(ROOM_KEY)
+  if (changed) roomNotes = id ? readNotes(id) : []
   bindRoomChannel(id)
+  if (changed) bindNotes(id)
 }
 
 /** rooms / players / speak_queue on `room:{room_id}`. card_events 另開一條，失敗也不影響這條。 */
@@ -312,7 +375,7 @@ export async function joinRoom(input: { code: string; name: string; email?: stri
   const cleanedCode = input.code.trim().toUpperCase()
   const display = parseDisplayName(input.name)
   const notice = parseNoticeEmail(input.email ?? '')
-  if (!cleanedCode) return { ok: false, error: '請輸入房間碼。' }
+  if (!cleanedCode) return { ok: false, error: tx('請輸入房間碼。', 'Enter a room code.') }
   if (!display.ok) return display
   if (!notice.ok) return notice
 
@@ -385,7 +448,7 @@ export async function startRoom(): Promise<ActionResult> {
       }
       try {
         const { hostDeckPayload } = await import('../host/coreKey.ts')
-        const payload = hostDeckPayload(memory.room.deck)
+        const payload = hostDeckPayload(memory.room.deck, memory.room.code)
         if (payload) {
           await rpc('start_self_paced', {
             p_room_id: roomId,
@@ -417,7 +480,7 @@ export async function endRoom(): Promise<ActionResult> {
 }
 
 export async function revealRound(): Promise<ActionResult> {
-  return { ok: false, error: '這一場是自速，不用逐張揭示。' }
+  return { ok: false, error: tx('呢一場唔使逐張揭示，學員會自己答。', 'This session does not reveal cards one by one. Learners answer on their own.') }
 }
 
 export async function nextRound(): Promise<ActionResult> {
@@ -481,6 +544,33 @@ export async function submitSelfPaced(input: {
     }
     return { ok: false, error: explain(error) }
   }
+}
+
+export async function sendNote(text: string, fromHost = false): Promise<ActionResult> {
+  const cleaned = text.trim().slice(0, 240)
+  if (!cleaned) return { ok: false, error: tx('請先寫一句。', 'Write a line first.') }
+  const you = memory.players.find((player) => player.id === memory.youId)
+  if (!you && !fromHost) return { ok: false, error: tx('你還沒有進入房間。', 'You are not in the room yet.') }
+  const phase = memory.room.phase
+  if (phase !== 'playing' && phase !== 'paused' && phase !== 'final') {
+    return { ok: false, error: tx('而家仲未可以傳字。等開始之後，或者喺結束頁再傳。', 'You can text after the session starts, and again at the end.') }
+  }
+  const host = Boolean(fromHost || you?.host)
+  const note: RoomNote = {
+    id: `note-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+    playerId: you?.id ?? `host-${memory.room.code}`,
+    name: host ? (you?.host ? you.name : '主持') : (you?.name ?? '學員'),
+    text: cleaned,
+    at: Date.now(),
+    fromHost: host,
+  }
+  rememberNote(note)
+  try {
+    if (noteChannel) await noteChannel.send({ type: 'broadcast', event: 'note', payload: note })
+  } catch {
+    /* 自己畫面已留下。其他人要等房間頻道接上。 */
+  }
+  return { ok: true }
 }
 
 export async function requestSpeak(): Promise<ActionResult> {
@@ -547,10 +637,14 @@ function boot() {
   deckPref = readDeck()
   memory = { ...emptyState, room: { ...emptyState.room, deck: deckPref } }
   roomId = sessionStorage.getItem(ROOM_KEY)
+  if (roomId) roomNotes = readNotes(roomId)
   void (async () => {
     try {
       await ensureAnonymousSession()
-      if (roomId) bindRoomChannel(roomId)
+      if (roomId) {
+        bindRoomChannel(roomId)
+        bindNotes(roomId)
+      }
     } catch {
       connection = 'reconnecting'
       publish()

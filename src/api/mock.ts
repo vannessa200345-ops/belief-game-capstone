@@ -50,6 +50,10 @@ export const mockApi: BeliefApi = {
     await wait(80)
     return store.submitSelfPaced(input)
   },
+  async sendNote(text, fromHost) {
+    await wait(80)
+    return store.sendNote(text, fromHost)
+  },
   async requestSpeak() {
     await wait(100)
     return store.requestSpeak()
