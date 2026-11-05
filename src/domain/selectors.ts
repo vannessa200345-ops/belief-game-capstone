@@ -492,7 +492,23 @@ export interface TimedPoint {
   answers: number
 }
 
+export interface SessionTimeBar {
+  id: string
+  /** 呢一場打亂後嘅次序，由 1 起。 */
+  number: number
+  avgSeconds: number
+  answers: number
+  /** 有用時嘅卡入面平均最短，而且同最長唔同秒。未作答唔會標。 */
+  mostSure: boolean
+  /** 有用時嘅卡入面平均最長。同最短一樣，只係分析，唔會扣分。 */
+  mostHesitant: boolean
+}
+
 export interface SessionTimeGlance {
+  /** 呢一場次序。未作答嘅卡都在，answers 係 0，方便同答中條形對位。 */
+  bars: SessionTimeBar[]
+  /** 呢場已儲存用時入面，最高嘅平均秒數。未有就係 0。 */
+  peakSeconds: number
   shortestCard: TimedPoint | null
   longestCard: TimedPoint | null
   fastestPerson: TimedPoint | null
@@ -550,9 +566,28 @@ export function selectSessionTime(state: GameState): SessionTimeGlance {
     })
   }
 
+  const shortestCard = extreme(cards, 'min')
+  const longestCard = extreme(cards, 'max')
+  const bars: SessionTimeBar[] = order.map((card, index) => {
+    const times = byCard.get(card.id)
+    const answers = times?.length ?? 0
+    const avgSeconds = times && times.length > 0 ? averageSeconds(times) : 0
+    return {
+      id: card.id,
+      number: index + 1,
+      avgSeconds,
+      answers,
+      mostSure: Boolean(shortestCard && answers > 0 && avgSeconds === shortestCard.avgSeconds),
+      mostHesitant: Boolean(longestCard && answers > 0 && avgSeconds === longestCard.avgSeconds),
+    }
+  })
+  const peakSeconds = bars.reduce((max, bar) => Math.max(max, bar.avgSeconds), 0)
+
   return {
-    shortestCard: extreme(cards, 'min'),
-    longestCard: extreme(cards, 'max'),
+    bars,
+    peakSeconds,
+    shortestCard,
+    longestCard,
     fastestPerson: extreme(people, 'min'),
     slowestPerson: extreme(people, 'max'),
     cardsWithTime: cards.length,
