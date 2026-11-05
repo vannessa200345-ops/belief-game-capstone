@@ -9,7 +9,7 @@ import { useLang } from '@/i18n/lang'
 import { usePageTitle } from '@/lib/title'
 
 const enterButtonClass =
-  'h-11 bg-pink px-6 text-[15px] text-ink shadow-none hover:bg-[#f3adc6] active:bg-[#eea3c2]'
+  'h-[3.25rem] min-w-[14rem] bg-pink px-9 text-base text-ink shadow-[0_8px_22px_rgba(248,187,208,0.55)] hover:bg-[#f3adc6] active:bg-[#eea3c2] md:h-14 md:min-w-[18rem] md:px-12'
 
 function cleanCode(value: string) {
   return value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8)
@@ -55,12 +55,12 @@ function ArriveStep({ inviteCode, onEnter }: { inviteCode: string; onEnter: () =
   }
 
   return (
-    <Frame>
+    <Frame width="entry">
       <main id="main">
         <BrandMark singleLine />
         {inviteCode ? (
           <>
-            <h1 className="mt-8 text-[1.85rem] font-medium leading-snug text-ink">
+            <h1 className="mt-8 text-[1.85rem] font-medium leading-snug text-ink md:text-[2.15rem]">
               {tx('用卡片，練習看清楚自己的信念', 'Use the cards to see your beliefs more clearly')}
             </h1>
             <p className="mt-4 text-sm text-muted">
@@ -103,7 +103,7 @@ function HomeContinue() {
 
   return (
     <>
-      <h1 className="mt-8 text-[1.85rem] font-medium leading-snug text-ink">
+      <h1 className="mt-8 text-[1.85rem] font-medium leading-snug text-ink md:text-[2.15rem]">
         {tx('用卡片，練習看清楚自己的信念', 'Use the cards to see your beliefs more clearly')}
       </h1>
       <form
@@ -113,7 +113,7 @@ function HomeContinue() {
           enter()
         }}
       >
-        <label className="block max-w-xs">
+        <label className="block max-w-xs md:max-w-lg">
           <span className="text-xs text-muted">{tx('連結或房間碼', 'Link or room code')}</span>
           <Input
             ref={field}
@@ -161,20 +161,20 @@ function NameStep({ code, onBack }: { code: string; onBack: () => void }) {
   }
 
   return (
-    <Frame>
+    <Frame width="entry">
       <main id="main">
         <BrandMark singleLine />
         <p className="mt-8 text-sm text-muted">
           {tx('房間', 'Room')} <span className="font-latin tracking-[0.16em] text-ink">{code}</span>
         </p>
-        <h1 className="mt-2 text-[1.85rem] font-medium leading-snug text-ink">
+        <h1 className="mt-2 text-[1.85rem] font-medium leading-snug text-ink md:text-[2.15rem]">
           {tx('點稱呼你', 'What should we call you')}
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-muted">
           {tx('主持同埋呢場嘅人會見到呢個名。', 'The host and people in this session will see this name.')}
         </p>
         <form className="mt-6" noValidate onSubmit={(event) => void onSubmit(event)}>
-          <label className="block max-w-xs">
+          <label className="block max-w-xs md:max-w-lg">
             <span className="text-sm text-ink">{tx('你的名字', 'Your name')}</span>
             <Input
               className="mt-2 h-11"
