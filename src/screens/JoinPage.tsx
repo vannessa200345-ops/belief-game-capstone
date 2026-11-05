@@ -3,11 +3,13 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api } from '@/api'
 import { BrandMark } from '@/components/BrandMark'
 import { Frame } from '@/components/Frame'
-import { NextStep } from '@/components/NextStep'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useLang } from '@/i18n/lang'
 import { usePageTitle } from '@/lib/title'
+
+const enterButtonClass =
+  'h-11 bg-pink px-6 text-[15px] text-ink shadow-none hover:bg-[#f3adc6] active:bg-[#eea3c2]'
 
 function cleanCode(value: string) {
   return value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8)
@@ -55,38 +57,23 @@ function ArriveStep({ inviteCode, onEnter }: { inviteCode: string; onEnter: () =
   return (
     <Frame>
       <main id="main">
-        <BrandMark />
+        <BrandMark singleLine />
         {inviteCode ? (
           <>
-            <h1 className="mt-10 text-[1.85rem] font-medium leading-snug text-ink">
+            <h1 className="mt-8 text-[1.85rem] font-medium leading-snug text-ink">
               {tx('用卡片，練習看清楚自己的信念', 'Use the cards to see your beliefs more clearly')}
             </h1>
-            <p className="mt-3 text-base leading-relaxed text-muted">
-              {tx('主持嘅連結已經帶你到呢間房。唔使打房間碼。', 'The host’s link already opened this room. You do not type a room code.')}
-            </p>
             <p className="mt-4 text-sm text-muted">
               {tx('房間', 'Room')} <span className="font-latin tracking-[0.16em] text-ink">{inviteCode}</span>
             </p>
-            <div className="mt-6">
-              <NextStep label={tx('下一步：', 'Next: ')}>
-                {tx('撳下面個大掣。下一版先寫你嘅名。', 'press the large button. Your name comes on the next screen.')}
-              </NextStep>
-            </div>
-            <Button
-              type="button"
-              className="mt-6 h-[4.5rem] w-full rounded-full bg-[#ef5b45] text-lg tracking-wide text-white shadow-[0_14px_30px_rgba(239,91,69,0.28)] hover:bg-[#e14e38]"
-              onClick={onEnter}
-            >
+            <QuietCode label={tx('唔係呢間房？', 'Not this room?')} onCode={useManualCode} />
+            <Button type="button" className={`mt-5 ${enterButtonClass}`} onClick={onEnter}>
               {tx('進入房間', 'Enter the room')}
             </Button>
           </>
         ) : (
           <HomeContinue />
         )}
-
-        {inviteCode ? (
-          <QuietCode label={tx('唔係呢間房？', 'Not this room?')} onCode={useManualCode} />
-        ) : null}
         <p className="mt-8">
           <Link to="/host" className="text-sm text-muted underline decoration-line underline-offset-4 hover:text-ink">
             {tx('我是主持', 'I am the host')}
@@ -102,15 +89,13 @@ function HomeContinue() {
   const navigate = useNavigate()
   const field = useRef<HTMLInputElement>(null)
   const [paste, setPaste] = useState('')
-  const [open, setOpen] = useState(false)
-  const [hint, setHint] = useState<string | null>(null)
+  const [needsCode, setNeedsCode] = useState(false)
 
   function enter() {
     const code = codeFromPaste(paste)
     if (!code) {
-      setOpen(true)
-      setHint(tx('貼上連結，或者房間碼。', 'Paste the link, or a room code.'))
-      window.setTimeout(() => field.current?.focus(), 0)
+      setNeedsCode(true)
+      field.current?.focus()
       return
     }
     navigate(`/r/${code}`, { state: { step: 'name' } })
@@ -118,56 +103,44 @@ function HomeContinue() {
 
   return (
     <>
-      <h1 className="mt-10 text-[1.85rem] font-medium leading-snug text-ink">
+      <h1 className="mt-8 text-[1.85rem] font-medium leading-snug text-ink">
         {tx('用卡片，練習看清楚自己的信念', 'Use the cards to see your beliefs more clearly')}
       </h1>
-      <Button
-        type="button"
-        className="mt-8 h-[4.5rem] w-full rounded-full bg-[#ef5b45] text-lg tracking-wide text-white shadow-[0_14px_30px_rgba(239,91,69,0.28)] hover:bg-[#e14e38]"
-        onClick={enter}
+      <form
+        className="mt-6"
+        onSubmit={(event) => {
+          event.preventDefault()
+          enter()
+        }}
       >
-        {tx('進入房間', 'Enter the room')}
-      </Button>
-      {open ? (
-        <form
-          className="mt-4"
-          onSubmit={(event) => {
-            event.preventDefault()
-            enter()
-          }}
-        >
-          <label className="block">
-            <span className="text-xs text-muted">{tx('連結或房間碼', 'Link or room code')}</span>
-            <Input
-              ref={field}
-              className="mt-1 h-9 px-3 text-sm"
-              value={paste}
-              onChange={(event) => {
-                setPaste(event.target.value)
-                setHint(null)
-              }}
-              autoCapitalize="off"
-              autoCorrect="off"
-              spellCheck={false}
-              autoComplete="off"
-              placeholder={tx('貼上連結', 'Paste a link')}
-              aria-label={tx('連結或房間碼', 'Link or room code')}
-            />
-          </label>
-          {hint ? <p className="mt-2 text-sm text-ink">{hint}</p> : null}
-        </form>
-      ) : (
-        <button
-          type="button"
-          className="mt-4 text-sm text-muted underline decoration-line underline-offset-4 hover:text-ink"
-          onClick={() => {
-            setOpen(true)
-            window.setTimeout(() => field.current?.focus(), 0)
-          }}
-        >
-          {tx('貼上連結', 'Paste a link')}
-        </button>
-      )}
+        <label className="block max-w-xs">
+          <span className="text-xs text-muted">{tx('連結或房間碼', 'Link or room code')}</span>
+          <Input
+            ref={field}
+            className="mt-1 h-9 px-3 text-sm"
+            value={paste}
+            onChange={(event) => {
+              setPaste(event.target.value)
+              setNeedsCode(false)
+            }}
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
+            autoComplete="off"
+            placeholder={tx('貼上連結', 'Paste a link')}
+            aria-label={tx('連結或房間碼', 'Link or room code')}
+            aria-invalid={needsCode}
+          />
+        </label>
+        {needsCode ? (
+          <p className="mt-2 text-sm text-ink" role="alert">
+            {tx('貼上連結，或者房間碼。', 'Paste the link, or a room code.')}
+          </p>
+        ) : null}
+        <Button type="submit" className={`mt-4 ${enterButtonClass}`}>
+          {tx('進入房間', 'Enter the room')}
+        </Button>
+      </form>
     </>
   )
 }
@@ -190,21 +163,21 @@ function NameStep({ code, onBack }: { code: string; onBack: () => void }) {
   return (
     <Frame>
       <main id="main">
-        <BrandMark />
-        <p className="mt-10 text-sm text-muted">
+        <BrandMark singleLine />
+        <p className="mt-8 text-sm text-muted">
           {tx('房間', 'Room')} <span className="font-latin tracking-[0.16em] text-ink">{code}</span>
         </p>
         <h1 className="mt-2 text-[1.85rem] font-medium leading-snug text-ink">
           {tx('點稱呼你', 'What should we call you')}
         </h1>
-        <p className="mt-3 text-base leading-relaxed text-muted">
+        <p className="mt-3 text-sm leading-relaxed text-muted">
           {tx('主持同埋呢場嘅人會見到呢個名。', 'The host and people in this session will see this name.')}
         </p>
-        <form className="mt-8" noValidate onSubmit={(event) => void onSubmit(event)}>
-          <label className="block">
+        <form className="mt-6" noValidate onSubmit={(event) => void onSubmit(event)}>
+          <label className="block max-w-xs">
             <span className="text-sm text-ink">{tx('你的名字', 'Your name')}</span>
             <Input
-              className="mt-2"
+              className="mt-2 h-11"
               value={name}
               onChange={(event) => setName(event.target.value)}
               autoComplete="name"
@@ -214,21 +187,12 @@ function NameStep({ code, onBack }: { code: string; onBack: () => void }) {
               aria-invalid={error != null}
             />
           </label>
-          <div className="mt-6">
-            <NextStep label={tx('下一步：', 'Next: ')}>
-              {tx('寫低名，再撳下面個大掣。', 'add your name, then press the large button.')}
-            </NextStep>
-          </div>
           {error ? (
             <p className="mt-4 text-sm text-ink" role="alert">
               {error}
             </p>
           ) : null}
-          <Button
-            type="submit"
-            className="mt-6 h-[4.5rem] w-full rounded-full bg-[#ef5b45] text-lg tracking-wide text-white shadow-[0_14px_30px_rgba(239,91,69,0.28)] hover:bg-[#e14e38]"
-            disabled={pending}
-          >
+          <Button type="submit" className={`mt-5 ${enterButtonClass}`} disabled={pending}>
             {pending ? tx('正在進入', 'Entering') : tx('進入房間', 'Enter the room')}
           </Button>
         </form>
@@ -254,10 +218,10 @@ function QuietCode({ label, onCode }: { label: string; onCode: (code: string) =>
   }
 
   return (
-    <details className="mt-8 text-sm text-muted">
+    <details className="mt-4 text-sm text-muted">
       <summary className="cursor-pointer underline decoration-line underline-offset-4">{label}</summary>
       <form className="mt-3" noValidate onSubmit={onSubmit}>
-        <label className="block">
+        <label className="block max-w-36">
           <span className="text-xs text-muted">{tx('房間碼（可選）', 'Room code (optional)')}</span>
           <Input
             className="mt-1 h-9 px-3 text-sm tracking-[0.14em] uppercase"
