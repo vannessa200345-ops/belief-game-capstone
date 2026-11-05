@@ -4,6 +4,7 @@ import { api } from '@/api'
 import { useGame } from '@/api/useGame'
 import { BrandMark } from '@/components/BrandMark'
 import { CardWave } from '@/components/CardWave'
+import { TimeGlance } from '@/components/TimeGlance'
 import { HostMessage } from '@/components/HostMessage'
 import { Leaderboard } from '@/components/Leaderboard'
 import { NextStep } from '@/components/NextStep'
@@ -97,13 +98,14 @@ export function ControlPage() {
               ? tx('等人到齊，撳「開始答題」。卡序會喺呢一場打亂。', 'when people are in, press Start answering. Card order is shuffled for this room.')
               : state.room.phase === 'final'
                 ? tx('撳學員個名，打開佢嘅整理做複盤。', 'open a learner’s name to see their summary for the debrief.')
-                : tx('睇條形。撳一條柱就見到係邊張卡。學員可以傳字過嚟。', 'watch the bars. Click one to see the card. Learners can text you.')}
+                : tx('睇條形。撳一條柱就見到係邊張卡，以及每人嘅答案同用時。學員可以傳字過嚟。', 'watch the bars. Click one to see the card, each person’s answer, and their time. Learners can text you.')}
           </NextStep>
         </div>
 
         {state.room.phase !== 'lobby' ? (
-          <div className="mt-6">
-            <CardWave />
+          <div className="mt-6 space-y-4">
+            <TimeGlance />
+            <CardWave showPlayers />
           </div>
         ) : null}
 

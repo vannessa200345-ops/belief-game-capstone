@@ -1,8 +1,8 @@
 import { useId, useState } from 'react'
 import { useGame } from '@/api/useGame'
 import { Panel } from '@/components/Panel'
-import { cardLine, cardTheme, findCard } from '@/domain/cards'
-import { selectCardWaves, type PaceGrade } from '@/domain/selectors'
+import { cardLine, cardTheme, findCard, optionLabel } from '@/domain/cards'
+import { selectCardAnswers, selectCardWaves, type PaceGrade } from '@/domain/selectors'
 import { useLang } from '@/i18n/lang'
 
 function waveArea(points: { x: number; y: number }[], baseY: number) {
@@ -25,9 +25,12 @@ function waveArea(points: { x: number; y: number }[], baseY: number) {
 export function CardWave({
   pace,
   variant = 'full',
+  showPlayers = false,
 }: {
   pace?: PaceGrade[]
   variant?: 'full' | 'compact'
+  /** 只俾主持台。學員畫面唔列出其他人嘅答案。 */
+  showPlayers?: boolean
 }) {
   const state = useGame()
   const { lang, tx } = useLang()
@@ -47,6 +50,7 @@ export function CardWave({
   const wrongTotal = wave.bars.reduce((sum, bar) => sum + bar.wrong, 0)
   const selected = wave.bars.find((bar) => bar.cardId === selectedId) ?? null
   const selectedCard = selected ? findCard(selected.cardId) : null
+  const selectedAnswers = showPlayers && selected ? selectCardAnswers(state, selected.cardId) : []
 
   const upPoints = wave.bars.map((bar, index) => ({
     x: index * slot + slot / 2,
@@ -175,6 +179,92 @@ export function CardWave({
                     `Matched ${selected.correct} · differed ${selected.wrong}`,
                   )}
                 </p>
+                {showPlayers ? (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-ink">{tx('呢張卡的學員', 'Learners on this card')}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-muted">
+                      {tx(
+                        '用時由短到長。最短係最有把握，最長係最猶豫，唔會扣分。',
+                        'Times run shortest to longest. Shortest is most sure, longest is most hesitant. It is not a penalty.',
+                      )}
+                    </p>
+                    {selectedAnswers.length === 0 ? (
+                      <p className="mt-2 text-sm text-muted">
+                        {tx('呢張還沒有人作答。', 'No one has answered this card yet.')}
+                      </p>
+                    ) : (
+                      <>
+                        <div className="mt-2 overflow-x-auto">
+                          <table className="w-full min-w-[28rem] text-left text-sm text-ink">
+                            <caption className="sr-only">
+                              {tx('呢張卡每位學員的答案、對照同用時', 'Each learner’s answer, check, and time on this card')}
+                            </caption>
+                            <thead>
+                              <tr className="text-xs text-muted">
+                                <th scope="col" className="py-2 pr-3 font-medium">{tx('名', 'Name')}</th>
+                                <th scope="col" className="py-2 pr-3 font-medium">{tx('答案', 'Answer')}</th>
+                                <th scope="col" className="py-2 pr-3 font-medium">{tx('啱／錯', 'Match')}</th>
+                                <th scope="col" className="py-2 font-medium">{tx('用時（秒）', 'Time (s)')}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {selectedAnswers.map((row) => (
+                                <tr
+                                  key={row.playerId}
+                                  className={
+                                    row.fastest
+                                      ? 'border-t border-line bg-blush'
+                                      : row.slowest
+                                        ? 'border-t border-line bg-[rgba(225,190,231,0.35)]'
+                                        : 'border-t border-line'
+                                  }
+                                >
+                                  <th scope="row" className="py-2 pr-3 text-left font-normal">
+                                    {row.left ? tx('已離開', 'Left') : row.name}
+                                    {row.demo ? <span className="text-muted"> · {tx('示範', 'demo')}</span> : null}
+                                  </th>
+                                  <td className="py-2 pr-3">{optionLabel(selectedCard, row.optionId, lang)}</td>
+                                  <td className="py-2 pr-3">
+                                    <span className="inline-flex items-center gap-2">
+                                      <span
+                                        className={
+                                          row.correct === true
+                                            ? 'size-2 rounded-full bg-[#5fbfb0]'
+                                            : row.correct === false
+                                              ? 'size-2 rounded-full bg-[#e07a90]'
+                                              : 'size-2 rounded-full bg-line'
+                                        }
+                                        aria-hidden="true"
+                                      />
+                                      {row.correct === true
+                                        ? tx('答中', 'Matched')
+                                        : row.correct === false
+                                          ? tx('與參考方向不同', 'Differed')
+                                          : tx('未核對', 'Not checked yet')}
+                                    </span>
+                                  </td>
+                                  <td className="py-2">
+                                    <span className="font-latin tabular-nums">{row.seconds}</span>
+                                    {row.fastest ? (
+                                      <span className="ml-2 rounded-full bg-pink px-2 py-0.5 text-xs text-ink">
+                                        {tx('最有把握', 'Most sure')}
+                                      </span>
+                                    ) : null}
+                                    {row.slowest ? (
+                                      <span className="ml-2 rounded-full bg-lavender px-2 py-0.5 text-xs text-ink">
+                                        {tx('最猶豫', 'Most hesitant')}
+                                      </span>
+                                    ) : null}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ) : null}
               </div>
             </div>
           ) : (

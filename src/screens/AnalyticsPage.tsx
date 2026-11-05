@@ -4,6 +4,7 @@ import { useGame } from '@/api/useGame'
 import { BrandMark } from '@/components/BrandMark'
 import { Frame } from '@/components/Frame'
 import { Panel } from '@/components/Panel'
+import { TimeGlance } from '@/components/TimeGlance'
 import { Switch } from '@/components/ui/switch'
 import { cardLine, findCard } from '@/domain/cards'
 import { formatPercent, formatSeconds } from '@/domain/format'
@@ -46,6 +47,10 @@ export function AnalyticsPage() {
             'Start with the cards that differed most, who has not chosen, and average time spent. Time is analysis only, not a penalty. Per-card scores stay hidden until you turn them on.',
           )}
         </p>
+
+        <div className="mt-8">
+          <TimeGlance />
+        </div>
 
         <Panel className="mt-8 px-5 py-5 sm:px-6">
           <div className="flex items-center justify-between gap-4">
