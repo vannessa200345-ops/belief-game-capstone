@@ -69,7 +69,7 @@ function readSlot(value: unknown): PublicSlot | null {
   if (!row || row.kind !== 'group' || typeof row.id !== 'string' || typeof row.startsAt !== 'string') return null
   const capacity = Number(row.capacity)
   const bookedCount = Number(row.bookedCount)
-  if (!Number.isInteger(capacity) || capacity < 1 || capacity > 30) return null
+  if (!Number.isInteger(capacity) || capacity < 1 || capacity > 200) return null
   if (!Number.isInteger(bookedCount) || bookedCount < 0) return null
   if (row.status !== 'open' && row.status !== 'full' && row.status !== 'started') return null
   if (row.hostLabel != null && typeof row.hostLabel !== 'string') return null

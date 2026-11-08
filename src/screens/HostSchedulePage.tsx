@@ -4,7 +4,7 @@ import { useGame } from '@/api/useGame'
 import { bookingApi } from '@/booking/api'
 import { defaultStartValue, formatWhen } from '@/booking/format'
 import { bookingMessage } from '@/booking/messages'
-import { parseCapacity, parseHostLabel, parseHostPin, parseRoomCode, parseStartsAt } from '@/booking/rules'
+import { BOOKING_SESSION_CAPACITY, parseHostLabel, parseHostPin, parseRoomCode, parseStartsAt } from '@/booking/rules'
 import type { PublicSlot, SlotBooking } from '@/booking/types'
 import { BrandMark } from '@/components/BrandMark'
 import { FreeNote } from '@/components/FreeNote'
@@ -12,7 +12,6 @@ import { Frame } from '@/components/Frame'
 import { Panel } from '@/components/Panel'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ROOM_CAPACITY, ROOM_IDEAL } from '@/domain/constants'
 import { useHostAccess } from '@/host/access'
 import { useLang } from '@/i18n/lang'
 import { withBase } from '@/lib/base'
@@ -23,7 +22,6 @@ export function HostSchedulePage() {
   const state = useGame()
   const { lang, tx } = useLang()
   const [startsAt, setStartsAt] = useState(defaultStartValue)
-  const [capacity, setCapacity] = useState(String(ROOM_IDEAL))
   const [hostLabel, setHostLabel] = useState('')
   const [roomCode, setRoomCode] = useState(session?.roomCode ?? state.room.code)
   const [slots, setSlots] = useState<PublicSlot[]>([])
@@ -62,11 +60,9 @@ export function HostSchedulePage() {
     event.preventDefault()
     if (!session) return
     const when = parseStartsAt(startsAt)
-    const cap = parseCapacity(capacity)
     const label = parseHostLabel(hostLabel)
     const code = parseRoomCode(roomCode)
     if (!when.ok) return setError(bookingMessage(when.error))
-    if (!cap.ok) return setError(bookingMessage(cap.error))
     if (!label.ok) return setError(bookingMessage(label.error))
     if (!code.ok) return setError(bookingMessage(code.error))
     setPending(true)
@@ -75,7 +71,7 @@ export function HostSchedulePage() {
     const result = await bookingApi.createSlot({
       proofPin: session.proofPin,
       startsAt: when.iso,
-      capacity: cap.capacity,
+      capacity: BOOKING_SESSION_CAPACITY,
       hostLabel: label.label,
       roomCode: code.code,
     })
@@ -129,8 +125,8 @@ export function HostSchedulePage() {
         </div>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted">
           {tx(
-            `請設定日期、時間與人數上限。上限由主持決定，不可超過 ${ROOM_CAPACITY} 人。這不會提高房間的技術上限。有人登記之後，即可開出房間並開始。`,
-            `Set the date, time, and player limit. The host chooses the limit, and it cannot exceed ${ROOM_CAPACITY}. This does not raise the technical room cap. Once people have joined, open the room and start.`,
+            '請設定日期與時間。有人登記之後，即可開出房間並開始。',
+            'Set the date and time. Once people have registered, open the room and start.',
           )}
         </p>
 
@@ -139,19 +135,6 @@ export function HostSchedulePage() {
             <label className="block sm:col-span-2" htmlFor="slot-start">
               <span className="text-sm text-ink">{tx('日期與時間', 'Date and time')}</span>
               <Input id="slot-start" className="mt-2" type="datetime-local" value={startsAt} onChange={(event) => setStartsAt(event.target.value)} required />
-            </label>
-            <label className="block" htmlFor="slot-capacity">
-              <span className="text-sm text-ink">{tx('人數上限', 'Player limit')}</span>
-              <Input
-                id="slot-capacity"
-                className="mt-2"
-                type="number"
-                min={1}
-                max={ROOM_CAPACITY}
-                value={capacity}
-                onChange={(event) => setCapacity(event.target.value)}
-                required
-              />
             </label>
             <label className="block" htmlFor="slot-host">
               <span className="text-sm text-ink">{tx('主持名稱（可選）', 'Host name (optional)')}</span>
@@ -315,7 +298,7 @@ function SlotCard({
   const joinPath = slot.roomCode ? withBase(`/r/${slot.roomCode}`) : ''
   const status =
     slot.status === 'full'
-      ? tx('名額已滿', 'Full')
+      ? tx('這一場已經額滿', 'This session is already full')
       : slot.status === 'started'
         ? tx('已經開始', 'Started')
         : tx('接受登記', 'Open')
@@ -376,7 +359,9 @@ function SlotCard({
           <h2 className="text-base font-medium">{formatWhen(slot.startsAt, lang)}</h2>
           <p className="mt-1 text-sm text-muted">
             {slot.hostLabel ? `${slot.hostLabel} · ` : ''}
-            {tx(`${slot.bookedCount} / ${slot.capacity} 人`, `${slot.bookedCount} / ${slot.capacity} people`)}
+            {slot.bookedCount >= slot.capacity
+              ? tx('這一場已經額滿', 'This session is already full')
+              : tx(`已登記 ${slot.bookedCount} 人`, `${slot.bookedCount} registered`)}
             {' · '}
             {status}
           </p>

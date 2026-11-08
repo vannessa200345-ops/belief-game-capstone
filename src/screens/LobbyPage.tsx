@@ -7,7 +7,6 @@ import { SelfPaceNotice } from '@/components/SelfPaceNotice'
 import { Frame } from '@/components/Frame'
 import { Panel } from '@/components/Panel'
 import { Button } from '@/components/ui/button'
-import { ROOM_CAPACITY, ROOM_IDEAL } from '@/domain/constants'
 import { deckMeta } from '@/domain/cards'
 import { youPlayer } from '@/domain/selectors'
 import { useLang } from '@/i18n/lang'
@@ -48,10 +47,7 @@ export function LobbyPage() {
           <p className="mt-5 text-base text-ink">{lang === 'en' ? deck.nameEn : deck.name}</p>
           <p className="mt-1 text-sm text-muted">{lang === 'en' ? deck.noteEn : deck.note}</p>
           <p className="mt-5 text-sm leading-relaxed text-muted">
-            {tx(
-              `在場 ${state.players.length} 人。理想約 ${ROOM_IDEAL} 人，上限 ${ROOM_CAPACITY} 人。`,
-              `${state.players.length} people here. Ideal about ${ROOM_IDEAL}, maximum ${ROOM_CAPACITY}.`,
-            )}
+            {tx(`在場 ${state.players.length} 人。`, `${state.players.length} people here.`)}
           </p>
           {you ? <p className="mt-3 text-sm text-ink">{tx(`這一場稱你為${you.name}。`, `This session calls you ${you.name}.`)}</p> : null}
         </Panel>

@@ -44,7 +44,7 @@ Apply `supabase/migrations/20261108150000_host_pin_and_bookings.sql` in the Supa
 
 A renter sets a different password for their own session at `/host/setup`, using a one-time claim code from the schedule. Players still join `/r/ROOMCODE` with no password.
 
-`/book` lists group slots and one-on-one teachers. The host chooses a slot capacity from 1 to 30. This migration does not change `rooms.max_players` and does not remove the technical room cap.
+`/book` lists group slots and one-on-one teachers. A booking session stores 200 registrations internally. The host does not set a room limit, and creating a room still sends `p_max_players` as null. Apply `20261108200000_booking_session_capacity.sql` so the database accepts that session size.
 
 After the host password is accepted, the console and `/host/analytics` stay available during play. Live scoring shows the match rate, people present, and how many cards already have a checked answer. Totals still come only from checked choices in this session. The host and demo learners are not scored. A projector control only enlarges that panel.
 
@@ -52,7 +52,7 @@ Public pages use a top bar, not a sidebar: `/about`, `/courses`, `/book`, and th
 
 `/book` is a separate page from the game enter screen at `/` and `/r/ROOMCODE`. The enter screen only takes a room code and a name. Booking is not shown there.
 
-`/book` starts with two services: a group session marked 隨緣樂助 (give as you wish, no advance payment, host-set capacity, at most 30) and a one-on-one of about one hour at HKD 800. The page registers the time and does not take payment. Andy (Theta Healing) can be chosen. Only Andy (Theta Healing) is offered in the public pickers. Apply `20261108190000_vanessa_not_bookable.sql` after the earlier booking migrations so production sets Vanessa `bookable` back to false. She stays in the table and can be opened again later.
+`/book` starts with two services: a group session marked 隨緣樂助 (give as you wish, no advance payment) and a one-on-one of about one hour at HKD 800. The page registers the time and does not take payment. Andy (Theta Healing) can be chosen. Only Andy (Theta Healing) is offered in the public pickers. Apply `20261108190000_vanessa_not_bookable.sql` after the earlier booking migrations so production sets Vanessa `bookable` back to false. She stays in the table and can be opened again later.
 
 Andy is the bookable one-on-one teacher. Group sessions are give as you wish, and the booking flow does not require payment first.
 

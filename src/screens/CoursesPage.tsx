@@ -4,7 +4,6 @@ import { PublicNav } from '@/components/PublicNav'
 import { Frame } from '@/components/Frame'
 import { Panel } from '@/components/Panel'
 import { Button } from '@/components/ui/button'
-import { ROOM_CAPACITY } from '@/domain/constants'
 import { useLang } from '@/i18n/lang'
 import { usePageTitle } from '@/lib/title'
 
@@ -33,12 +32,6 @@ export function CoursesPage() {
               <p className="mt-3 text-3xl text-ink">{tx('隨緣樂助', 'Give as you wish')}</p>
               <p className="mt-4 text-sm leading-relaxed text-ink">
                 {tx('無需預先付款。金額由你決定，不是預購門票。', 'No advance payment. The amount is yours to decide. This is not a prepaid ticket.')}
-              </p>
-              <p className="mt-2 text-sm leading-relaxed text-muted">
-                {tx(
-                  `人數上限由主持設定，目前不多於 ${ROOM_CAPACITY} 人。`,
-                  `The host sets the limit. For now it is no more than ${ROOM_CAPACITY} people.`,
-                )}
               </p>
             </Panel>
             <Panel className="px-6 py-8">

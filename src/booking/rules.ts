@@ -1,4 +1,5 @@
-import { ROOM_CAPACITY } from '../domain/constants.ts'
+/** How many people one booking session can register. Not a game-room cap, and not shown as a public limit. */
+export const BOOKING_SESSION_CAPACITY = 200
 
 const FIVE_MINUTES = 5 * 60 * 1000
 const TWO_YEARS = 366 * 2 * 24 * 60 * 60 * 1000
@@ -39,7 +40,7 @@ export function parseCapacity(value: string): { ok: true; capacity: number } | {
   const trimmed = value.trim()
   if (!/^\d+$/.test(trimmed)) return { ok: false, error: 'capacity' }
   const capacity = Number(trimmed)
-  if (!Number.isInteger(capacity) || capacity < 1 || capacity > ROOM_CAPACITY) {
+  if (!Number.isInteger(capacity) || capacity < 1 || capacity > BOOKING_SESSION_CAPACITY) {
     return { ok: false, error: 'capacity' }
   }
   return { ok: true, capacity }

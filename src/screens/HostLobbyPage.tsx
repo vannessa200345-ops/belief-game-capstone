@@ -11,7 +11,6 @@ import { Panel } from '@/components/Panel'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DECKS, deckMeta } from '@/domain/cards'
-import { ROOM_CAPACITY, ROOM_IDEAL } from '@/domain/constants'
 import { phaseLabel } from '@/domain/format'
 import type { DeckId } from '@/domain/types'
 import { useLang } from '@/i18n/lang'
@@ -195,11 +194,8 @@ export function HostLobbyPage() {
             </p>
             <p className="mt-2 text-sm leading-relaxed text-muted">
               {demos > 0
-                ? tx(
-                    `示範學員 ${demos} 人，真實進入 ${real} 人。理想約 ${ROOM_IDEAL} 人，上限 ${ROOM_CAPACITY} 人。`,
-                    `${demos} demo learners, ${real} real. Ideal about ${ROOM_IDEAL}, maximum ${ROOM_CAPACITY}.`,
-                  )
-                : tx(`理想約 ${ROOM_IDEAL} 人，上限 ${ROOM_CAPACITY} 人。`, `Ideal about ${ROOM_IDEAL}, maximum ${ROOM_CAPACITY}.`)}
+                ? tx(`示範學員 ${demos} 人，真實進入 ${real} 人。`, `${demos} demo learners, ${real} real.`)
+                : tx(`真實進入 ${real} 人。`, `${real} real.`)}
             </p>
             <div className="mt-5 h-px w-8 bg-gold" aria-hidden="true" />
             <p className="mt-4 text-sm text-muted">{tx('最近加入', 'Joined recently')}</p>

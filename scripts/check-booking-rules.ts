@@ -21,12 +21,11 @@ test('host pin is six digits', () => {
   assert.equal(parseHostPin('12a456').ok, false)
 })
 
-test('capacity stays within the technical cap', () => {
+test('a booking session stores at most 200 registrations', () => {
+  assert.deepEqual(parseCapacity('200'), { ok: true, capacity: 200 })
   assert.deepEqual(parseCapacity('1'), { ok: true, capacity: 1 })
-  assert.deepEqual(parseCapacity('30'), { ok: true, capacity: 30 })
-  assert.deepEqual(parseCapacity('08'), { ok: true, capacity: 8 })
   assert.equal(parseCapacity('0').ok, false)
-  assert.equal(parseCapacity('31').ok, false)
+  assert.equal(parseCapacity('201').ok, false)
   assert.equal(parseCapacity('').ok, false)
   assert.equal(parseCapacity('20.5').ok, false)
 })

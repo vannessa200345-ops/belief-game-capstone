@@ -11,7 +11,6 @@ import { Frame } from '@/components/Frame'
 import { Panel } from '@/components/Panel'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ROOM_CAPACITY } from '@/domain/constants'
 import { useLang } from '@/i18n/lang'
 import { cn } from '@/lib/utils'
 import { usePageTitle } from '@/lib/title'
@@ -179,7 +178,7 @@ export function BookingPage() {
                     title={tx('小組場次', 'Group session')}
                     price={tx('隨緣樂助', 'Give as you wish')}
                     detail={tx('無需預先付款。金額由你決定，不是預購門票。', 'No advance payment. The amount is yours to decide. This is not a prepaid ticket.')}
-                    meta={tx(`人數上限由主持設定，不多於 ${ROOM_CAPACITY} 人。`, `The host sets the limit, at most ${ROOM_CAPACITY} people.`)}
+                    meta={tx('登記完成後，遊戲開始時再到進入房間頁。', 'After you register, use the enter-room page when the game starts.')}
                     pressed={kind === 'group'}
                     onClick={() => chooseKind('group')}
                   />
@@ -254,7 +253,9 @@ export function BookingPage() {
                                   <span className="block text-ink">{formatWhen(item.startsAt, lang)}</span>
                                   <span className="mt-1 block text-sm text-muted">
                                     {item.hostLabel ? `${item.hostLabel} · ` : ''}
-                                    {tx(`${item.bookedCount}／${item.capacity} 人`, `${item.bookedCount}/${item.capacity} people`)}
+                                    {item.bookedCount >= item.capacity
+                                      ? tx('這一場已經額滿', 'This session is already full')
+                                      : tx(`已登記 ${item.bookedCount} 人`, `${item.bookedCount} registered`)}
                                   </span>
                                 </span>
                               </span>
