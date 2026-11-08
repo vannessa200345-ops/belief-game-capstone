@@ -5,7 +5,9 @@ import { Frame } from '@/components/Frame'
 import { PlayerSync } from '@/components/PlayerSync'
 import { HostAccessProvider } from '@/host/access'
 import { AnalyticsPage } from '@/screens/AnalyticsPage'
+import { AboutPage } from '@/screens/AboutPage'
 import { BookingPage } from '@/screens/BookingPage'
+import { CoursesPage } from '@/screens/CoursesPage'
 import { ControlPage } from '@/screens/ControlPage'
 import { FinalPage } from '@/screens/FinalPage'
 import { HostDebriefPage } from '@/screens/HostDebriefPage'
@@ -59,6 +61,8 @@ export default function App() {
           <Routes>
             <Route path="/" element={<JoinPage />} />
             <Route path="/r/:code" element={<JoinPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/courses" element={<CoursesPage />} />
             <Route path="/book" element={<BookingPage />} />
             <Route path="/play/lobby" element={<LobbyPage />} />
             <Route path="/play" element={<PlayPage />} />

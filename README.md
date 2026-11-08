@@ -48,6 +48,8 @@ A renter sets a different password for their own session at `/host/setup`, using
 
 After the host password is accepted, the console and `/host/analytics` stay available during play. Live scoring shows the match rate, people present, and how many cards already have a checked answer. Totals still come only from checked choices in this session. The host and demo learners are not scored. A projector control only enlarges that panel.
 
+Public pages use a top bar, not a sidebar: `/about`, `/courses`, `/book`, and the enter-room screen. `/` and `/r/ROOMCODE` stay a room-code form, with only a slim top bar. The host desk keeps its own links and does not use that marketing bar.
+
 `/book` is a separate page from the game enter screen at `/` and `/r/ROOMCODE`. The enter screen only takes a room code and a name. Booking is not shown there.
 
 `/book` starts with two services: a free group session (donations welcome, host-set capacity, at most 30) and a one-on-one of about one hour at HKD 800. The page registers the time and does not take payment. Andy can be chosen. Vanessa is listed as not yet open while `bookable` is false. Apply `20261108160000_teacher_bookable_on_board.sql` after the first booking migration so that flag is returned.

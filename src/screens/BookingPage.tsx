@@ -5,7 +5,7 @@ import { defaultStartValue, formatWhen } from '@/booking/format'
 import { bookingMessage } from '@/booking/messages'
 import { parseBookingName, parseContact, parseStartsAt } from '@/booking/rules'
 import type { PublicSlot, PublicTeacher } from '@/booking/types'
-import { BrandMark } from '@/components/BrandMark'
+import { PublicNav } from '@/components/PublicNav'
 import { Frame } from '@/components/Frame'
 import { Panel } from '@/components/Panel'
 import { Button } from '@/components/ui/button'
@@ -122,15 +122,11 @@ export function BookingPage() {
   }
 
   return (
-    <Frame width="host">
+    <>
+      <PublicNav />
+      <Frame width="host">
       <main id="main">
-        <div className="flex items-start justify-between gap-4">
-          <BrandMark kicker="預約" />
-          <Link to="/" className="text-sm text-muted underline decoration-line underline-offset-4 hover:text-ink">
-            {tx('前往進入房間', 'Go to enter a room')}
-          </Link>
-        </div>
-        <p className="mt-8 text-sm text-muted">{tx('預約', 'Booking')}</p>
+        <p className="text-sm text-muted">{tx('預約', 'Booking')}</p>
         <h1 className="mt-2 text-[1.85rem] font-medium leading-snug">{tx('預約場次', 'Book a session')}</h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted">
           {tx(
@@ -288,7 +284,8 @@ export function BookingPage() {
           </Link>
         </p>
       </main>
-    </Frame>
+      </Frame>
+    </>
   )
 }
 

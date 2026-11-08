@@ -151,11 +151,8 @@ function HostPinPage() {
           <Link to="/host/setup" className="text-ink underline decoration-line underline-offset-4">
             {tx('我有領取碼，要設定本場密碼', 'I have a claim code and want to set this session’s password')}
           </Link>
-          <Link to="/book" className="text-muted underline decoration-line underline-offset-4">
-            {tx('預約頁', 'Booking page')}
-          </Link>
-          <Link to="/" className="text-muted underline decoration-line underline-offset-4">
-            {tx('學員入口', 'Student entrance')}
+          <Link to="/about" className="text-muted underline decoration-line underline-offset-4">
+            {tx('返回網站', 'Back to the site')}
           </Link>
         </p>
       </main>
