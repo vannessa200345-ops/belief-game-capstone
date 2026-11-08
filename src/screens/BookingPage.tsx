@@ -158,8 +158,8 @@ export function BookingPage() {
                 <div className="mt-6 grid gap-6 md:grid-cols-2">
                   <ServiceCard
                     title={tx('小組場次', 'Group session')}
-                    price={tx('免費', 'Free')}
-                    detail={tx('歡迎捐款。無需預先付款。', 'Donations are welcome. Payment is not required first.')}
+                    price={tx('隨緣樂助', 'Give as you wish')}
+                    detail={tx('無需預先付款。金額由你決定，不是預購門票。', 'No advance payment. The amount is yours to decide. This is not a prepaid ticket.')}
                     meta={tx(`人數上限由主持設定，不多於 ${ROOM_CAPACITY} 人。`, `The host sets the limit, at most ${ROOM_CAPACITY} people.`)}
                     pressed={kind === 'group'}
                     onClick={() => chooseKind('group')}
@@ -315,7 +315,7 @@ function ServiceCard({
       )}
     >
       <span className="block text-sm text-muted">{title}</span>
-      <span className="mt-3 block font-latin text-3xl text-ink">{price}</span>
+      <span className="mt-3 block text-3xl text-ink">{price}</span>
       <span className="mt-4 block text-sm leading-relaxed text-ink">{detail}</span>
       <span className="mt-2 block text-sm leading-relaxed text-muted">{meta}</span>
     </button>
@@ -349,7 +349,7 @@ function Confirmation({
       <ol className="mt-6 list-decimal space-y-3 pl-5 text-sm leading-relaxed text-ink">
         {done.kind === 'group' ? (
           <>
-            <li>{tx('小組場次免費參加，歡迎捐款。無需預先付款。', 'The group session is free to join. Donations are welcome. Payment is not required first.')}</li>
+            <li>{tx('小組場次為隨緣樂助，無需預先付款。', 'The group session is give as you wish. No advance payment is required.')}</li>
             <li>
               {done.join
                 ? tx(`遊戲開始時，請到「進入房間」頁，使用房間碼 ${done.join}。本頁不代為進入。`, `When the game starts, open the enter-room page and use room code ${done.join}. This page does not enter the room for you.`)

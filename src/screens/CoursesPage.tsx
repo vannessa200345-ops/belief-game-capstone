@@ -29,9 +29,9 @@ export function CoursesPage() {
           <div className="mt-10 grid gap-6 md:grid-cols-2">
             <Panel className="px-6 py-8">
               <p className="text-sm text-muted">{tx('小組場次', 'Group session')}</p>
-              <p className="mt-3 font-latin text-3xl text-ink">{tx('免費', 'Free')}</p>
+              <p className="mt-3 text-3xl text-ink">{tx('隨緣樂助', 'Give as you wish')}</p>
               <p className="mt-4 text-sm leading-relaxed text-ink">
-                {tx('歡迎捐款。無需預先付款。', 'Donations are welcome. Payment is not required first.')}
+                {tx('無需預先付款。金額由你決定，不是預購門票。', 'No advance payment. The amount is yours to decide. This is not a prepaid ticket.')}
               </p>
               <p className="mt-2 text-sm leading-relaxed text-muted">
                 {tx(
