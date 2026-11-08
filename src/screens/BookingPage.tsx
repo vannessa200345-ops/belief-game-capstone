@@ -125,14 +125,18 @@ export function BookingPage() {
     <Frame width="host">
       <main id="main">
         <div className="flex items-start justify-between gap-4">
-          <BrandMark kicker="Book" />
+          <BrandMark kicker="預約" />
           <Link to="/" className="text-sm text-muted underline decoration-line underline-offset-4 hover:text-ink">
-            {tx('學員入口', 'Student entrance')}
+            {tx('前往進入房間', 'Go to enter a room')}
           </Link>
         </div>
-        <h1 className="mt-10 text-[1.85rem] font-medium leading-snug">{tx('預約場次', 'Book a session')}</h1>
+        <p className="mt-8 text-sm text-muted">{tx('預約', 'Booking')}</p>
+        <h1 className="mt-2 text-[1.85rem] font-medium leading-snug">{tx('預約場次', 'Book a session')}</h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted">
-          {tx('請先選擇形式，再選擇導師與時間。加入房間不需要密碼。', 'Choose a format, then a teacher and a time. Joining a room does not need a password.')}
+          {tx(
+            '此頁只供預約小組場次或一對一。進入進行中的房間，請使用另一頁的房間碼或加入連結。',
+            'This page is only for booking a group session or a one-on-one. To enter a live room, use the room code or join link on the separate enter page.',
+          )}
         </p>
 
         {done ? (
@@ -351,8 +355,8 @@ function Confirmation({
             <li>{tx('小組場次免費參加，歡迎捐款。無需預先付款。', 'The group session is free to join. Donations are welcome. Payment is not required first.')}</li>
             <li>
               {done.join
-                ? tx(`遊戲開始時，請進入房間 ${done.join}。無需密碼。`, `When the game starts, enter room ${done.join}. No password is required.`)
-                : tx('遊戲開始時，請用主持提供的加入連結進入。無需密碼。', 'When the game starts, use the join link from the host. No password is required.')}
+                ? tx(`遊戲開始時，請到「進入房間」頁，使用房間碼 ${done.join}。本頁不代為進入。`, `When the game starts, open the enter-room page and use room code ${done.join}. This page does not enter the room for you.`)
+                : tx('遊戲開始時，請到「進入房間」頁，使用主持提供的房間碼或加入連結。', 'When the game starts, open the enter-room page and use the room code or join link from the host.')}
             </li>
             <li>{tx('請按時出席。名額以登記為準。', 'Please arrive at the scheduled time. Your place follows this registration.')}</li>
           </>
@@ -368,11 +372,11 @@ function Confirmation({
           </>
         )}
       </ol>
-      {done.join ? (
-        <Button className="mt-6" asChild>
-          <Link to={`/r/${done.join}`}>{tx('進入房間', 'Enter the room')}</Link>
-        </Button>
-      ) : null}
+      <p className="mt-6 text-sm">
+        <Link to={done.join ? `/r/${done.join}` : '/'} className="text-ink underline decoration-line underline-offset-4">
+          {tx('稍後前往進入房間頁', 'Later, open the enter-room page')}
+        </Link>
+      </p>
     </Panel>
   )
 }
