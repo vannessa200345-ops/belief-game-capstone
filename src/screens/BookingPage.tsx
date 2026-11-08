@@ -36,7 +36,14 @@ export function BookingPage() {
   const [name, setName] = useState('')
   const [contact, setContact] = useState('')
   const [pending, setPending] = useState(false)
-  const [done, setDone] = useState<{ kind: Kind; teacherName: string; when: string; join: string | null } | null>(null)
+  const [done, setDone] = useState<{
+    kind: Kind
+    teacherName: string
+    modality: string
+    modalityEn: string
+    when: string
+    join: string | null
+  } | null>(null)
   usePageTitle(tx('信念遊戲 · 預約場次', 'Belief Game · Book a session'))
 
   useEffect(() => {
@@ -95,6 +102,8 @@ export function BookingPage() {
       setDone({
         kind,
         teacherName: slot.hostLabel ?? teacher.name,
+        modality: teacher.summary,
+        modalityEn: teacher.summaryEn,
         when: formatWhen(slot.startsAt, lang),
         join: slot.roomCode,
       })
@@ -116,6 +125,8 @@ export function BookingPage() {
     setDone({
       kind,
       teacherName: teacher.name,
+      modality: teacher.summary,
+      modalityEn: teacher.summaryEn,
       when: formatWhen(when.iso, lang),
       join: null,
     })
@@ -165,10 +176,10 @@ export function BookingPage() {
                     onClick={() => chooseKind('group')}
                   />
                   <ServiceCard
-                    title={tx('一對一對話', 'One-on-one')}
+                    title={tx('一對一', 'One-on-one')}
                     price={`HKD ${ONE_ON_ONE_HKD}`}
                     detail={tx('約一小時。本頁只作登記，不在此收款。', 'About one hour. This page registers the time and does not take payment.')}
-                    meta={tx('現時可選 Andy。', 'Andy is available now.')}
+                    meta={tx('現時可選 Andy（希塔療癒）。Vanessa 的 Quantum healing 稍後開放。', 'Andy (Theta Healing) is available now. Vanessa’s Quantum healing opens later.')}
                     pressed={kind === 'one'}
                     onClick={() => chooseKind('one')}
                   />
@@ -336,7 +347,7 @@ function Confirmation({
   done,
   contact,
 }: {
-  done: { kind: Kind; teacherName: string; when: string; join: string | null }
+  done: { kind: Kind; teacherName: string; modality: string; modalityEn: string; when: string; join: string | null }
   contact: string
 }) {
   const { tx } = useLang()
@@ -359,7 +370,12 @@ function Confirmation({
           </>
         ) : (
           <>
-            <li>{tx(`一對一約一小時，費用 HKD ${ONE_ON_ONE_HKD}。`, `The one-on-one is about one hour and costs HKD ${ONE_ON_ONE_HKD}.`)}</li>
+            <li>
+              {tx(
+                `與 ${done.teacherName} 的一對一約一小時，費用 HKD ${ONE_ON_ONE_HKD}。${done.modality}`,
+                `The one-on-one with ${done.teacherName} is about one hour and costs HKD ${ONE_ON_ONE_HKD}. ${done.modalityEn}`,
+              )}
+            </li>
             <li>{tx('本頁不收款。請與導師確認付款方式。', 'This page does not take payment. Confirm payment with the teacher.')}</li>
             <li>
               {contact

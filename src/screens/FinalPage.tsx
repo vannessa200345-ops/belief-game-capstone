@@ -111,8 +111,8 @@ export function FinalPage() {
           <h2 className="text-base font-medium">{tx('如希望繼續，可以預約一對一', 'If you want to continue, book a one-on-one')}</h2>
           <p className="mt-3 text-sm leading-relaxed text-muted">
             {tx(
-              '小組場次之後，可以向導師預約一對一對話。現時可預約 Andy。一對一約一小時，費用 HKD 800，本頁只作登記。',
-              'After the group session, you can book a one-on-one with a teacher. Andy is available now. A one-on-one is about one hour, HKD 800, and this page only registers it.',
+              '小組場次之後，可以預約一對一。現時可預約 Andy 的希塔療癒。Vanessa 的 Quantum healing 稍後開放。約一小時，費用 HKD 800，本頁只作登記。',
+              'After the group session, you can book a one-on-one. Andy’s Theta Healing is available now. Vanessa’s Quantum healing opens later. About one hour, HKD 800. This page only registers it.',
             )}
           </p>
           <Button className="mt-4" asChild>

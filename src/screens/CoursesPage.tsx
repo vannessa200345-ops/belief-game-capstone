@@ -44,10 +44,13 @@ export function CoursesPage() {
               <p className="text-sm text-muted">{tx('一對一', 'One-on-one')}</p>
               <p className="mt-3 font-latin text-3xl text-ink">HKD 800</p>
               <p className="mt-4 text-sm leading-relaxed text-ink">
-                {tx('約一小時。此處只作登記，不在此收款。', 'About one hour. This site only registers the time. Payment is not collected here.')}
+                {tx('約一小時，費用 HKD 800。此處只作登記，不在此收款。', 'About one hour, HKD 800. This site only registers the time. Payment is not collected here.')}
               </p>
               <p className="mt-2 text-sm leading-relaxed text-muted">
-                {tx('現時可預約 Andy。Vanessa 稍後開放。', 'Andy is available now. Vanessa opens later.')}
+                {tx(
+                  'Andy：希塔療癒。現時可預約。Vanessa：Quantum healing，認證量子療癒師。稍後開放。',
+                  'Andy: Theta Healing. Available now. Vanessa: Quantum healing, certified quantum practitioner. Opens later.',
+                )}
               </p>
             </Panel>
           </div>

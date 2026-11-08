@@ -125,15 +125,15 @@ values
   (
     'andy',
     'Andy',
-    '小組場次之後，可以預約一對一對話。',
-    'After a group session, you can book a one-on-one conversation.',
+    '希塔療癒。現時可預約。',
+    'Theta Healing. Available now.',
     true
   ),
   (
     'vanessa',
     'Vanessa',
-    '暫未開放預約。',
-    'Not open for booking yet.',
+    'Quantum healing。認證量子療癒師。稍後開放。',
+    'Quantum healing. Certified quantum practitioner. Opens later.',
     false
   );
 
