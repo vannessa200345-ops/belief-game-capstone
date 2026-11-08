@@ -161,14 +161,15 @@ function boardOf(state: MockState): BookingBoard {
   const now = Date.now()
   return {
     teachers: teachers
-      .filter((teacher) => teacher.bookable)
       .map((teacher) => ({
         id: teacher.id,
         slug: teacher.slug,
         name: teacher.name,
         summary: teacher.summary,
         summaryEn: teacher.summaryEn,
-      })),
+        bookable: teacher.bookable,
+      }))
+      .sort((a, b) => Number(b.bookable) - Number(a.bookable) || a.name.localeCompare(b.name)),
     slots: state.slots
       .filter((slot) => visible(slot, now))
       .sort((a, b) => a.startsAt.localeCompare(b.startsAt))

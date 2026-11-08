@@ -46,7 +46,9 @@ A renter sets a different password for their own session at `/host/setup`, using
 
 `/book` lists group slots and one-on-one teachers. The host chooses a slot capacity from 1 to 30. This migration does not change `rooms.max_players` and does not remove the technical room cap.
 
-After the host password is accepted, the console and `/host/analytics` stay available during play. Live scoring adds matched, differed, and unchecked totals from choices already stored for this session. It does not invent scores, and it does not count the host or demo learners.
+After the host password is accepted, the console and `/host/analytics` stay available during play. Live scoring shows the match rate, people present, and how many cards already have a checked answer. Totals still come only from checked choices in this session. The host and demo learners are not scored. A projector control only enlarges that panel.
+
+`/book` starts with two services: a free group session (donations welcome, host-set capacity, at most 30) and a one-on-one of about one hour at HKD 800. The page registers the time and does not take payment. Andy can be chosen. Vanessa is listed as not yet open while `bookable` is false. Apply `20261108160000_teacher_bookable_on_board.sql` after the first booking migration so that flag is returned.
 
 Andy is bookable for one-on-one. Vanessa is on `teachers` with `bookable = false` until that row is enabled. The first public sessions are free to join. Donations are welcome, and the booking flow does not require payment first.
 

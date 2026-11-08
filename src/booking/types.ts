@@ -4,6 +4,7 @@ export interface PublicTeacher {
   name: string
   summary: string
   summaryEn: string
+  bookable: boolean
 }
 
 export interface PublicSlot {

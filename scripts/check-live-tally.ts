@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { tallyRate, tallySession } from '../src/domain/tally.ts'
+import { personStatus, tallyRate, tallySession } from '../src/domain/tally.ts'
 
 const players = [
   { id: 'host', name: '主持', host: true },
@@ -31,6 +31,12 @@ test('latest graded answer wins and unchecked answers stay out of both totals', 
   assert.equal(tally.matched, 3)
   assert.equal(tally.differed, 1)
   assert.equal(tally.pending, 1)
+  assert.equal(tally.covered, 2)
+  const annStatus = tally.people.find((person) => person.name === '陳可恩')
+  const lamStatus = tally.people.find((person) => person.name === '林子朗')
+  assert.equal(annStatus && personStatus(annStatus, 3), 'follow')
+  assert.equal(lamStatus && personStatus(lamStatus, 3), 'open')
+  assert.equal(lamStatus && personStatus({ ...lamStatus, matched: 3, differed: 0, pending: 0 }, 3), 'done')
   assert.equal(tallyRate(tally), 0.75)
   assert.deepEqual(tally.people.map((person) => person.name).sort(), ['林子朗', '陳可恩'])
   const ann = tally.people.find((person) => person.name === '陳可恩')

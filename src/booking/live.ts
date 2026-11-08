@@ -54,7 +54,14 @@ function readTeacher(value: unknown): PublicTeacher | null {
   if (!row) return null
   if (typeof row.id !== 'string' || typeof row.slug !== 'string' || typeof row.name !== 'string') return null
   if (typeof row.summary !== 'string' || typeof row.summaryEn !== 'string') return null
-  return { id: row.id, slug: row.slug, name: row.name, summary: row.summary, summaryEn: row.summaryEn }
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    summary: row.summary,
+    summaryEn: row.summaryEn,
+    bookable: row.bookable !== false,
+  }
 }
 
 function readSlot(value: unknown): PublicSlot | null {

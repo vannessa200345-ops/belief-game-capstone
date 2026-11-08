@@ -18,6 +18,8 @@ export interface LiveTally {
   matched: number
   differed: number
   pending: number
+  /** 已有核對結果的題數。同一張只計一次。 */
+  covered: number
   people: TallyPerson[]
   cards: TallyCard[]
 }
@@ -46,7 +48,7 @@ export function tallySession(input: {
   order: { id: string }[]
 }): LiveTally {
   if (!input.keyed) {
-    return { keyed: false, matched: 0, differed: 0, pending: 0, people: [], cards: [] }
+    return { keyed: false, matched: 0, differed: 0, pending: 0, covered: 0, people: [], cards: [] }
   }
 
   const learners = input.players.filter((player) => !player.host && !player.demo)
@@ -102,7 +104,15 @@ export function tallySession(input: {
   cards.sort((a, b) => b.differed - a.differed || a.number - b.number)
 
   const roster = [...people.values()].sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'))
-  return { keyed: true, matched, differed, pending, people: roster, cards }
+  return { keyed: true, matched, differed, pending, covered: byCard.size, people: roster, cards }
+}
+
+/** 已齊：本套已全部核對。需跟進：仍有未核對，或不同多於一致。其餘為未齊。 */
+export function personStatus(person: TallyPerson, totalQuestions: number): 'done' | 'follow' | 'open' {
+  const graded = person.matched + person.differed
+  if (totalQuestions > 0 && graded >= totalQuestions) return 'done'
+  if (person.pending > 0 || (graded > 0 && person.differed > person.matched)) return 'follow'
+  return 'open'
 }
 
 export function tallyRate(tally: Pick<LiveTally, 'matched' | 'differed'>): number | null {
