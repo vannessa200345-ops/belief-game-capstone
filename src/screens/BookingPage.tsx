@@ -62,9 +62,16 @@ export function BookingPage() {
     }
   }, [])
 
-  const teacher = teachers.find((item) => item.id === teacherId) ?? null
+  const offeredTeachers = teachers.filter((item) => item.bookable)
+  const teacher = offeredTeachers.find((item) => item.id === teacherId) ?? null
+  const closedNames = new Set(teachers.filter((item) => !item.bookable).map((item) => item.name))
   const slot = slots.find((item) => item.id === slotId) ?? null
-  const openSlots = slots.filter((item) => item.status === 'open' && item.bookedCount < item.capacity)
+  const openSlots = slots.filter(
+    (item) =>
+      item.status === 'open' &&
+      item.bookedCount < item.capacity &&
+      !(item.hostLabel && closedNames.has(item.hostLabel)),
+  )
 
   function chooseKind(next: Kind) {
     setKind(next)
@@ -179,7 +186,7 @@ export function BookingPage() {
                     title={tx('一對一', 'One-on-one')}
                     price={`HKD ${ONE_ON_ONE_HKD}`}
                     detail={tx('約一小時。本頁只作登記，不在此收款。', 'About one hour. This page registers the time and does not take payment.')}
-                    meta={tx('現時可選 Andy（希塔療癒）或 Vanessa（Quantum healing，認證量子療癒師）。', 'Andy (Theta Healing) or Vanessa (Quantum healing, certified quantum practitioner) can be chosen now.')}
+                    meta={tx('現時可選 Andy（希塔療癒）。', 'Andy (Theta Healing) can be chosen now.')}
                     pressed={kind === 'one'}
                     onClick={() => chooseKind('one')}
                   />
@@ -191,33 +198,26 @@ export function BookingPage() {
               <section className="mt-10" aria-labelledby="pick-host">
                 <h2 id="pick-host" className="text-lg font-medium">{tx('選擇導師', 'Choose a teacher')}</h2>
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                  {teachers.map((item) => (
+                  {offeredTeachers.map((item) => (
                     <button
                       key={item.id}
                       type="button"
-                      disabled={!item.bookable}
                       aria-pressed={teacherId === item.id}
                       onClick={() => chooseTeacher(item)}
                       className={cn(
                         'rounded-[28px] border px-6 py-6 text-left',
                         teacherId === item.id ? 'border-pink bg-blush' : 'border-line bg-white',
-                        item.bookable ? '' : 'cursor-not-allowed opacity-70',
                       )}
                     >
-                      <span className="flex items-center justify-between gap-3">
-                        <span className="text-lg text-ink">{item.name}</span>
-                        {item.bookable ? null : (
-                          <span className="rounded-full border border-line px-2.5 py-0.5 text-xs text-muted">{tx('稍後開放', 'Opens later')}</span>
-                        )}
-                      </span>
+                      <span className="block text-lg text-ink">{item.name}</span>
                       <span className="mt-3 block text-sm leading-relaxed text-muted">
                         {lang === 'en' ? item.summaryEn : item.summary}
                       </span>
                     </button>
                   ))}
                 </div>
-                {teachers.length === 0 && !loading ? (
-                  <p className="mt-4 text-sm text-muted">{tx('暫時沒有可顯示的導師。', 'No teachers to show yet.')}</p>
+                {offeredTeachers.length === 0 && !loading ? (
+                  <p className="mt-4 text-sm text-muted">{tx('暫時沒有可預約的導師。', 'No teachers are open for booking yet.')}</p>
                 ) : null}
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Button variant="ghost" onClick={() => setStep(1)}>{tx('返回', 'Back')}</Button>

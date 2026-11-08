@@ -48,8 +48,8 @@ export function CoursesPage() {
               </p>
               <p className="mt-2 text-sm leading-relaxed text-muted">
                 {tx(
-                  'Andy：希塔療癒。現時可預約。Vanessa：Quantum healing，認證量子療癒師。現時可預約。',
-                  'Andy: Theta Healing. Available now. Vanessa: Quantum healing, certified quantum practitioner. Available now.',
+                  '現時可預約 Andy：希塔療癒。',
+                  'Andy is available now: Theta Healing.',
                 )}
               </p>
             </Panel>
