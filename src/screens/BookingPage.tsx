@@ -5,6 +5,7 @@ import { defaultStartValue, formatWhen } from '@/booking/format'
 import { bookingMessage } from '@/booking/messages'
 import { parseBookingName, parseContact, parseStartsAt } from '@/booking/rules'
 import type { PublicSlot, PublicTeacher } from '@/booking/types'
+import { AndyPublicFacts } from '@/components/AndyPublicFacts'
 import { PublicNav } from '@/components/PublicNav'
 import { Frame } from '@/components/Frame'
 import { Panel } from '@/components/Panel'
@@ -199,21 +200,25 @@ export function BookingPage() {
                 <h2 id="pick-host" className="text-lg font-medium">{tx('選擇導師', 'Choose a teacher')}</h2>
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
                   {offeredTeachers.map((item) => (
-                    <button
+                    <div
                       key={item.id}
-                      type="button"
-                      aria-pressed={teacherId === item.id}
-                      onClick={() => chooseTeacher(item)}
                       className={cn(
-                        'rounded-[28px] border px-6 py-6 text-left',
+                        'rounded-[28px] border px-6 py-6',
                         teacherId === item.id ? 'border-pink bg-blush' : 'border-line bg-white',
                       )}
                     >
-                      <span className="block text-lg text-ink">{item.name}</span>
-                      <span className="mt-3 block text-sm leading-relaxed text-muted">
-                        {lang === 'en' ? item.summaryEn : item.summary}
-                      </span>
-                    </button>
+                      <button type="button" className="w-full text-left" aria-pressed={teacherId === item.id} onClick={() => chooseTeacher(item)}>
+                        <span className="block text-lg text-ink">{item.name}</span>
+                        <span className="mt-3 block text-sm leading-relaxed text-muted">
+                          {lang === 'en' ? item.summaryEn : item.summary}
+                        </span>
+                      </button>
+                      {item.slug === 'andy' ? (
+                        <div className="mt-4">
+                          <AndyPublicFacts />
+                        </div>
+                      ) : null}
+                    </div>
                   ))}
                 </div>
                 {offeredTeachers.length === 0 && !loading ? (
