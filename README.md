@@ -52,9 +52,9 @@ Public pages use a top bar, not a sidebar: `/about`, `/courses`, `/book`, and th
 
 `/book` is a separate page from the game enter screen at `/` and `/r/ROOMCODE`. The enter screen only takes a room code and a name. Booking is not shown there.
 
-`/book` starts with two services: a group session marked 隨緣樂助 (give as you wish, no advance payment, host-set capacity, at most 30) and a one-on-one of about one hour at HKD 800. The page registers the time and does not take payment. Andy (Theta Healing) can be chosen. Vanessa (Quantum healing, certified quantum practitioner) is listed as not yet open while `bookable` is false. Apply `20261108160000_teacher_bookable_on_board.sql` after the first booking migration so that flag is returned.
+`/book` starts with two services: a group session marked 隨緣樂助 (give as you wish, no advance payment, host-set capacity, at most 30) and a one-on-one of about one hour at HKD 800. The page registers the time and does not take payment. Andy (Theta Healing) can be chosen. Vanessa (Quantum healing, certified quantum practitioner) can be chosen too. Apply `20261108160000_teacher_bookable_on_board.sql`, then `20261108170000_teacher_modalities.sql` and `20261108180000_vanessa_bookable.sql`, so production lists both as bookable.
 
-Andy is bookable for one-on-one. Vanessa is on `teachers` with `bookable = false` until that row is enabled. Group sessions are give as you wish, and the booking flow does not require payment first.
+Andy and Vanessa are both bookable for one-on-one. Group sessions are give as you wish, and the booking flow does not require payment first.
 
 ## Try the pictured decks
 

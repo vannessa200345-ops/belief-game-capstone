@@ -179,7 +179,7 @@ export function BookingPage() {
                     title={tx('一對一', 'One-on-one')}
                     price={`HKD ${ONE_ON_ONE_HKD}`}
                     detail={tx('約一小時。本頁只作登記，不在此收款。', 'About one hour. This page registers the time and does not take payment.')}
-                    meta={tx('現時可選 Andy（希塔療癒）。Vanessa 的 Quantum healing 稍後開放。', 'Andy (Theta Healing) is available now. Vanessa’s Quantum healing opens later.')}
+                    meta={tx('現時可選 Andy（希塔療癒）或 Vanessa（Quantum healing，認證量子療癒師）。', 'Andy (Theta Healing) or Vanessa (Quantum healing, certified quantum practitioner) can be chosen now.')}
                     pressed={kind === 'one'}
                     onClick={() => chooseKind('one')}
                   />

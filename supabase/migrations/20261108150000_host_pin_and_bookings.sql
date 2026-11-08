@@ -118,8 +118,6 @@ revoke all on table public.host_credentials from public, anon, authenticated;
 revoke all on table public.host_claims from public, anon, authenticated;
 revoke all on table public.host_pin_attempts from public, anon, authenticated;
 
--- Enable Vanessa later with:
---   update public.teachers set bookable = true where slug = 'vanessa';
 insert into public.teachers (slug, name, summary, summary_en, bookable)
 values
   (
@@ -132,9 +130,9 @@ values
   (
     'vanessa',
     'Vanessa',
-    'Quantum healing。認證量子療癒師。稍後開放。',
-    'Quantum healing. Certified quantum practitioner. Opens later.',
-    false
+    'Quantum healing。認證量子療癒師。現時可預約。',
+    'Quantum healing. Certified quantum practitioner. Available now.',
+    true
   );
 
 -- bcrypt hash only. Generated with pgcrypto crypt(..., gen_salt('bf', 12)).

@@ -69,9 +69,9 @@ const teachers: Array<PublicTeacher & { bookable: boolean }> = [
     id: 'teacher-vanessa',
     slug: 'vanessa',
     name: 'Vanessa',
-    summary: 'Quantum healing。認證量子療癒師。稍後開放。',
-    summaryEn: 'Quantum healing. Certified quantum practitioner. Opens later.',
-    bookable: false,
+    summary: 'Quantum healing。認證量子療癒師。現時可預約。',
+    summaryEn: 'Quantum healing. Certified quantum practitioner. Available now.',
+    bookable: true,
   },
 ]
 
