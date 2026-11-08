@@ -2,6 +2,7 @@ import { Link, Route, Routes } from 'react-router-dom'
 import { useLang } from '@/i18n/lang'
 import { ConnectionGate } from '@/components/Connection'
 import { Frame } from '@/components/Frame'
+import { RoomAudio } from '@/components/RoomAudio'
 import { PlayerSync } from '@/components/PlayerSync'
 import { AnalyticsPage } from '@/screens/AnalyticsPage'
 import { ControlPage } from '@/screens/ControlPage'
@@ -46,6 +47,7 @@ export default function App() {
         {tx('跳到內容', 'Skip to content')}
       </a>
       <PlayerSync />
+      <RoomAudio />
       <ConnectionGate>
         <Routes>
           <Route path="/" element={<JoinPage />} />

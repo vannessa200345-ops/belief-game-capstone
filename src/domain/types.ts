@@ -115,7 +115,7 @@ export interface GameState {
   botPlans: BotPlan[]
   /** 留下電郵的人。離開座位後仍保留，直到另開一場。 */
   notices: SessionNotice[]
-  /** 這一場嘅文字訊息。唔係電郵，亦唔使開咪。 */
+  /** 這一場的文字訊息。不是電郵，也不需要開麥克風。 */
   notes: RoomNote[]
   connection: Connection
   /** 這一頁探測到的答題 RPC。不寫入房間，刷新後再探。 */
@@ -123,6 +123,23 @@ export interface GameState {
   /** 伺服器答題進度。沒有 RPC 時是空的。 */
   remoteAnswered: Record<string, number>
   serverAnswerCount: number
+  /**
+   * 全房答中題數，不含選項。
+   * 主持由 card_events 算出；學員由 get_room_leaderboard 或主持廣播得到。
+   */
+  remoteCorrect: Record<string, number>
+  /** true 之後，其他學員的 0 分才可以顯示。未對齊前不要把其他人畫成 0。 */
+  scoresReady: boolean
+  /** 全房同步的背景音樂。anchorAt 用主持裝置的時鐘。 */
+  music: RoomMusic | null
+}
+
+/** 全房同一條播放時間線。playing 時，anchorAt 之後位置才向前走。 */
+export interface RoomMusic {
+  trackId: string
+  playing: boolean
+  positionMs: number
+  anchorAt: number
 }
 
 export type PersistedState = Omit<GameState, 'connection' | 'selfPaceLink'>

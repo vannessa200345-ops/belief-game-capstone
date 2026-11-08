@@ -30,6 +30,17 @@ export function Leaderboard({
         <p className="mt-4 text-sm leading-relaxed text-muted">
           {tx('這一套的參考答案還沒放進房間，所以暫不排名。', 'This deck has no reference key in the room yet, so there is no rank.')}
         </p>
+      ) : board.pending ? (
+        <div className="mt-4">
+          <p className="text-sm leading-relaxed text-ink">
+            {tx('正在對齊這一場的分數。', 'Scores for this session are still lining up.')}
+          </p>
+          {board.you ? (
+            <p className="mt-2 text-sm text-muted">
+              {tx(`你目前是 ${board.you.correct} 分。`, `You have ${board.you.correct} points so far.`)}
+            </p>
+          ) : null}
+        </div>
       ) : board.rows.length === 0 ? (
         <p className="mt-4 text-sm text-ink">{tx('未有學員入榜。', 'No learners on the board yet.')}</p>
       ) : (

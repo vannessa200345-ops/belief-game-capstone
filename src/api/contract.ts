@@ -33,8 +33,10 @@ export interface BeliefApi {
     timeMs: number
   }): Promise<SelfPaceSubmitResult>
   requestSpeak(): Promise<ActionResult>
-  /** 學員傳字俾主持。唔使開咪，亦唔會發電郵。 */
+  /** 學員傳送訊息給主持。不需要開麥克風，也不會發送電郵。 */
   sendNote(text: string, fromHost?: boolean): Promise<ActionResult>
+  /** 主持控制全房同步的背景音樂。學員不能改曲目或播放狀態。 */
+  setRoomMusic(input: { trackId: string; action: 'play' | 'pause' | 'select' }): Promise<ActionResult>
   lowerHand(): Promise<ActionResult>
   clearSpeakQueue(): Promise<ActionResult>
   pauseRoom(): Promise<ActionResult>

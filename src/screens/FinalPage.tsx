@@ -90,7 +90,7 @@ export function FinalPage() {
         </p>
         <div className="mt-4">
           <NextStep label={tx('下一步：', 'Next: ')}>
-            {tx('睇下面嘅整理，可以下載圖片，或者傳字俾主持。', 'read the summary below, download a picture, or text the host.')}
+            {tx('請查看下方整理。可以下載圖片，或傳送訊息給主持。', 'Read the summary below. You can download a picture, or send a message to the host.')}
           </NextStep>
         </div>
         <div className="mt-4">

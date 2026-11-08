@@ -40,9 +40,9 @@ export function attentionLabel(kind: AttentionKind, lang: 'zh' | 'en' = 'zh'): s
   const en = lang === 'en'
   switch (kind) {
     case 'timeout':
-      return en ? 'Still on this card' : '仲停喺呢張'
+      return en ? 'Still on this card' : '仍停在這一張'
     case 'stuck':
-      return en ? 'Paused here' : '停住'
+      return en ? 'Paused here' : '暫停於此'
     case 'offline':
       return en ? 'Not connected' : '未連上'
     case 'slow':
@@ -54,12 +54,12 @@ export function attentionNote(kind: AttentionKind, lang: 'zh' | 'en' = 'zh'): st
   const en = lang === 'en'
   switch (kind) {
     case 'timeout':
-      return en ? 'No choice yet on this card. Time is only a note, not a penalty.' : '呢張未有選擇。時間只係紀錄，唔會扣分。'
+      return en ? 'No choice yet on this card. Time is only a note, not a penalty.' : '這一張尚未有選擇。時間只是紀錄，不會扣分。'
     case 'stuck':
       return en ? 'Still on this card' : '仍停在這一張'
     case 'offline':
       return en ? 'Not connected to this room' : '連線不在這一房'
     case 'slow':
-      return en ? 'No choice yet. This only describes time spent.' : '還沒有留下選擇。呢度只描述用咗幾耐。'
+      return en ? 'No choice yet. This only describes time spent.' : '還沒有留下選擇。這裡只描述用了多久。'
   }
 }

@@ -43,7 +43,7 @@ export function AnalyticsPage() {
         <h1 className="mt-10 text-[1.85rem] font-medium leading-snug">{tx('這一場的整理', 'This session')}</h1>
         <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted">
           {tx(
-            '先看與參考方向不同較多的卡，以及誰還沒選、平均用了幾耐。時間只係分析，唔會扣分。逐張分數預設不顯示。',
+            '先看與參考方向不同較多的卡，以及誰還沒選、平均用了多久。時間只是分析，不會扣分。逐張分數預設不顯示。',
             'Start with the cards that differed most, who has not chosen, and average time spent. Time is analysis only, not a penalty. Per-card scores stay hidden until you turn them on.',
           )}
         </p>
@@ -75,7 +75,7 @@ export function AnalyticsPage() {
           <h2 className="text-lg font-medium">{tx('與參考方向不同比較多的卡', 'Cards that differed most')}</h2>
           <p className="mt-1 text-sm text-muted">
             {tx(
-              '答中比例：已核對入面同參考方向一樣嘅比例。與參考方向不同：揀咗相反。還沒選：未有選擇。平均用了：每張平均幾多秒。',
+              '答中比例：已核對的選擇之中，與參考方向相同的比例。與參考方向不同：選擇了相反方向。還沒選：尚未有選擇。平均用了：每張平均多少秒。',
               'Match rate: share of checked answers that follow the reference. Differed: the other way. Not chosen: no choice yet. Average time: seconds spent.',
             )}
           </p>
@@ -115,9 +115,9 @@ export function AnalyticsPage() {
         </section>
 
         <section className="mt-10">
-          <h2 className="text-lg font-medium">{tx('每一組用咗幾耐', 'Time by group')}</h2>
+          <h2 className="text-lg font-medium">{tx('每一組用了多久', 'Time by group')}</h2>
           {groupTime.size === 0 ? (
-            <p className="mt-2 text-sm text-muted">{tx('未有可以分組嘅用時。', 'No grouped times yet.')}</p>
+            <p className="mt-2 text-sm text-muted">{tx('尚未有可以分組的用時。', 'No grouped times yet.')}</p>
           ) : (
             <ul className="mt-3 space-y-2">
               {[...groupTime.entries()].map(([label, values]) => {
@@ -135,7 +135,7 @@ export function AnalyticsPage() {
         <section className="mt-10">
           <h2 className="text-lg font-medium">{tx('人與用時', 'People and time spent')}</h2>
           <p className="mt-1 text-sm text-muted">
-            {tx('還沒選較多的人在前面，其後按平均用了幾耐。唔係扣分排序。', 'People with more unchosen cards come first, then by average time spent. This is not a penalty ranking.')}
+            {tx('還沒選較多的人在前面，其後按平均用了多久排列。這不是扣分排序。', 'People with more unchosen cards come first, then by average time spent. This is not a penalty ranking.')}
           </p>
           <ul className="mt-4 divide-y divide-line overflow-hidden rounded-[28px] border border-line bg-white">
             {analytics.players.map((player) => (

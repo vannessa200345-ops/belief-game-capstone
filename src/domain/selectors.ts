@@ -8,6 +8,7 @@ import type {
   CardStat,
   GameState,
   PersonalReview,
+  PersistedState,
   Player,
   PlayerStat,
   RoundMonitor,
@@ -311,11 +312,13 @@ export interface LeaderRow {
 export interface LeaderboardSnapshot {
   /** false：這套未有參考答案，不要把 0 分當成排名。 */
   keyed: boolean
+  /** true：學員尚未收到其他人的分數，不要把他們畫成 0。 */
+  pending: boolean
   rows: LeaderRow[]
   you: LeaderRow | null
 }
 
-function gradesFor(state: GameState, playerId: string, yours: PaceGrade[] | undefined) {
+function gradesFor(state: PersistedState, playerId: string, yours: PaceGrade[] | undefined) {
   const byCard = new Map<string, boolean | null>()
   for (const answer of state.answers) {
     if (answer.playerId !== playerId) continue
@@ -334,13 +337,22 @@ function gradesFor(state: GameState, playerId: string, yours: PaceGrade[] | unde
   return correct
 }
 
+function shownCorrect(state: PersistedState, playerId: string, yours: PaceGrade[] | undefined) {
+  const local = gradesFor(state, playerId, yours)
+  if (state.scoresReady !== true) return local
+  const remote = state.remoteCorrect?.[playerId]
+  if (playerId === state.youId) return Math.max(local, remote ?? local)
+  if (typeof remote === 'number') return remote
+  return local
+}
+
 /**
  * 這一場排名。只用答中題數，不讀主持答案 key，也不列出邊張選了甚麼。
  * 主持同示範學員不入榜。
  */
 export function selectLeaderboard(state: GameState, yours?: PaceGrade[]): LeaderboardSnapshot {
   const keyed = deckHasAnswerKey(state.room.deck)
-  if (!keyed) return { keyed: false, rows: [], you: null }
+  if (!keyed) return { keyed: false, pending: false, rows: [], you: null }
 
   const scored = state.players
     .filter((player) => !player.host && !player.demo)
@@ -348,7 +360,7 @@ export function selectLeaderboard(state: GameState, yours?: PaceGrade[]): Leader
       playerId: player.id,
       name: player.name,
       you: player.id === state.youId,
-      correct: gradesFor(state, player.id, yours),
+      correct: shownCorrect(state, player.id, yours),
       rank: 0,
     }))
     .sort((a, b) => {
@@ -366,11 +378,31 @@ export function selectLeaderboard(state: GameState, yours?: PaceGrade[]): Leader
     row.rank = rank
   })
 
+  const ready = state.scoresReady === true
+  const viewer = state.players.find((player) => player.id === state.youId)
+  const markedHost = state.players.some((player) => player.host)
+  const viewerIsHost = Boolean(viewer?.host) || !markedHost
+  const otherLearners = state.players.some(
+    (player) => !player.host && !player.demo && player.id !== state.youId,
+  )
+  const pending = !viewerIsHost && !ready && otherLearners
+
   return {
     keyed: true,
-    rows: scored,
+    pending,
+    rows: pending ? scored.filter((row) => row.you) : scored,
     you: scored.find((row) => row.you) ?? null,
   }
+}
+
+/** 主持畫面用的全房答中題數。不讀 pace，也不包含主持或示範學員。 */
+export function roomCorrectCounts(state: PersistedState): Record<string, number> {
+  const counts: Record<string, number> = {}
+  for (const player of state.players) {
+    if (player.host || player.demo) continue
+    counts[player.id] = gradesFor(state, player.id, undefined)
+  }
+  return counts
 }
 
 export interface CardWaveBar {

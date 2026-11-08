@@ -65,11 +65,11 @@ export function CardWave({
 
   return (
     <Panel className="px-5 py-5" aria-label={tx('每一張的答中與答錯', 'Matched and differed on each card')}>
-      <h2 className="text-base font-medium">{tx('每一張，而家', 'Each card, right now')}</h2>
+      <h2 className="text-base font-medium">{tx('每一張的現況', 'Each card, right now')}</h2>
       <p className="mt-1 text-sm leading-relaxed text-muted">
         {tx(
-          '答中向上，同參考方向不同就向下。撳一條柱，睇係邊張卡。次序係呢一場打亂之後嘅次序。',
-          'Matched grows up. Differed from the reference grows down. Click a bar to see the card. The order is this session’s shuffled order.',
+          '答中向上，與參考方向不同則向下。請按一條長條，查看是哪一張卡。次序是這一場打亂之後的次序。',
+          'Matched grows up. Differed from the reference grows down. Press a bar to see the card. The order is this session’s shuffled order.',
         )}
       </p>
       {!wave.keyed ? (
@@ -181,29 +181,29 @@ export function CardWave({
                 </p>
                 {showPlayers ? (
                   <div className="mt-4">
-                    <p className="text-sm font-medium text-ink">{tx('呢張卡的學員', 'Learners on this card')}</p>
+                    <p className="text-sm font-medium text-ink">{tx('這一張卡的學員', 'Learners on this card')}</p>
                     <p className="mt-1 text-sm leading-relaxed text-muted">
                       {tx(
-                        '用時由短到長。最短係最有把握，最長係最猶豫，唔會扣分。',
+                        '用時由短到長。最短是最有把握，最長是最猶豫，不會扣分。',
                         'Times run shortest to longest. Shortest is most sure, longest is most hesitant. It is not a penalty.',
                       )}
                     </p>
                     {selectedAnswers.length === 0 ? (
                       <p className="mt-2 text-sm text-muted">
-                        {tx('呢張還沒有人作答。', 'No one has answered this card yet.')}
+                        {tx('這一張還沒有人作答。', 'No one has answered this card yet.')}
                       </p>
                     ) : (
                       <>
                         <div className="mt-2 overflow-x-auto">
                           <table className="w-full min-w-[28rem] text-left text-sm text-ink">
                             <caption className="sr-only">
-                              {tx('呢張卡每位學員的答案、對照同用時', 'Each learner’s answer, check, and time on this card')}
+                              {tx('這一張卡每位學員的答案、對照與用時', 'Each learner’s answer, check, and time on this card')}
                             </caption>
                             <thead>
                               <tr className="text-xs text-muted">
                                 <th scope="col" className="py-2 pr-3 font-medium">{tx('名', 'Name')}</th>
                                 <th scope="col" className="py-2 pr-3 font-medium">{tx('答案', 'Answer')}</th>
-                                <th scope="col" className="py-2 pr-3 font-medium">{tx('啱／錯', 'Match')}</th>
+                                <th scope="col" className="py-2 pr-3 font-medium">{tx('對照', 'Match')}</th>
                                 <th scope="col" className="py-2 font-medium">{tx('用時（秒）', 'Time (s)')}</th>
                               </tr>
                             </thead>
@@ -268,7 +268,7 @@ export function CardWave({
               </div>
             </div>
           ) : (
-            <p className="mt-3 text-sm text-muted">{tx('撳一條柱，睇係邊張卡。', 'Click a bar to see which card it is.')}</p>
+            <p className="mt-3 text-sm text-muted">{tx('請按一條長條，查看是哪一張卡。', 'Press a bar to see which card it is.')}</p>
           )}
         </>
       )}

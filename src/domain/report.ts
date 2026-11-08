@@ -92,11 +92,11 @@ function whyWrong(choiceId: 'yes' | 'no', lang: ReportLang): string {
   if (choiceId === 'yes') {
     return lang === 'en'
       ? 'You chose Yes. In this session that does not match the reference direction. The reference for this line is No: it is a limiting belief to release, not one to agree with.'
-      : '你揀咗「是」。呢一場呢句同參考方向唔同。參考方向係「毫無道理」：呢句係限制性、宜放下嘅信念，唔係要認同一句。'
+      : '你選擇了「是」。這一場這一句與參考方向不同。參考方向是「毫無道理」：這一句是限制性、宜放下的信念，不是要認同的一句。'
   }
   return lang === 'en'
     ? 'You chose No. In this session that does not match the reference direction. The reference for this line is Yes: it is a healthier belief worth keeping.'
-    : '你揀咗「毫無道理」。呢一場呢句同參考方向唔同。參考方向係「是」：呢句係較健康、值得留低嘅信念。'
+    : '你選擇了「毫無道理」。這一場這一句與參考方向不同。參考方向是「是」：這一句是較健康、值得保留的信念。'
 }
 
 function average(values: number[]): number | null {
@@ -160,7 +160,7 @@ export function buildSessionReport(input: {
         ? ''
         : input.lang === 'en'
           ? `Pause on the ${missedLines.length} line${missedLines.length === 1 ? '' : 's'} in this group that differed from the reference this session: ${quotes}.`
-          : `呢一組呢一場有 ${missedLines.length} 句同參考方向唔同，可以再停一停：${quotes}。`
+          : `這一組在這一場有 ${missedLines.length} 句與參考方向不同，可以再停留一下：${quotes}。`
       return {
         group,
         label: groupLabel(group, input.lang),

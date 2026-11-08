@@ -44,7 +44,7 @@ export function HostDebriefPage() {
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-muted">
           {tx(
-            '只使用這一場房間入面的選擇同用時。主持可以喺複盤時打開。',
+            '只使用這一場的選擇與用時。主持可在複盤時打開。',
             'This uses only the choices and times from this room. Open it during the debrief.',
           )}
         </p>

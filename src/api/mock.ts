@@ -54,6 +54,10 @@ export const mockApi: BeliefApi = {
     await wait(80)
     return store.sendNote(text, fromHost)
   },
+  async setRoomMusic(input) {
+    await wait(40)
+    return store.setRoomMusic(input)
+  },
   async requestSpeak() {
     await wait(100)
     return store.requestSpeak()

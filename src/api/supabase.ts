@@ -16,6 +16,7 @@ export const supabaseApi: BeliefApi = {
   submitSelfPaced: (input) => live.submitSelfPaced(input),
   requestSpeak: () => live.requestSpeak(),
   sendNote: (text, fromHost) => live.sendNote(text, fromHost),
+  setRoomMusic: (input) => live.setRoomMusic(input),
   lowerHand: () => live.lowerHand(),
   clearSpeakQueue: () => live.clearSpeakQueue(),
   pauseRoom: () => live.pauseRoom(),
