@@ -15,21 +15,20 @@ export function PublicNav({ tone = 'site' }: { tone?: 'site' | 'slim' }) {
   ]
 
   return (
-    <header className={cn('border-b border-line bg-white/75', tone === 'slim' ? 'py-2' : 'py-3.5')}>
+    <header className={cn('bg-transparent', tone === 'slim' ? 'pt-4' : 'pt-7')}>
       <div className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-x-8 gap-y-3 px-5 sm:px-8">
         <Link to="/about" className="shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lavender">
           <BrandMark singleLine={tone === 'slim'} />
         </Link>
-        <nav aria-label={tx('網站', 'Site')} className="flex flex-wrap items-center gap-1">
+        <nav aria-label={tx('網站', 'Site')} className="flex flex-wrap items-center gap-x-5 gap-y-2">
           {items.map((item) => (
             <Link
               key={item.to}
               to={item.to}
               aria-current={item.active ? 'page' : undefined}
               className={cn(
-                'rounded-full px-3 py-1.5 text-sm',
-                item.active ? 'bg-blush text-ink' : 'text-muted hover:text-ink',
-                tone === 'slim' ? 'px-2.5 py-1' : '',
+                'text-sm underline-offset-4',
+                item.active ? 'text-ink underline decoration-pink decoration-2' : 'text-muted hover:text-ink',
               )}
             >
               {item.label}
