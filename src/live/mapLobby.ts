@@ -105,5 +105,8 @@ export function mapLobby(
       : [],
     remoteAnswered: {},
     serverAnswerCount: lobby.answer_count ?? 0,
+    remoteCorrect: {},
+    scoresReady: false,
+    music: null,
   }
 }

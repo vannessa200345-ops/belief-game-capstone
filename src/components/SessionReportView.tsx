@@ -25,10 +25,10 @@ export function SessionReportView({ report }: { report: SessionReport }) {
   return (
     <div className="space-y-4">
       <Panel className="px-6 py-6">
-        <h2 className="text-base font-medium">{tx('呢一場數字', 'This session')}</h2>
+        <h2 className="text-base font-medium">{tx('這一場數字', 'This session')}</h2>
         <p className="mt-2 text-sm leading-relaxed text-muted">
           {tx(
-            '答中比例：已核對嘅選擇入面，同參考方向一樣嘅比例。與參考方向不同：呢場揀咗相反。還沒選：呢場未有選擇。平均用了：每張用咗幾多秒。時間只係分析，唔會扣分。',
+            '答中比例：已核對的選擇之中，與參考方向相同的比例。與參考方向不同：這一場選擇了相反方向。還沒選：這一場尚未有選擇。平均用了：每張用了多少秒。時間只是分析，不會扣分。',
             'Match rate: share of checked choices that follow the reference. Differed: choices that went the other way. Not chosen: cards with no choice yet. Average time: seconds spent per card. Time is analysis only, not a penalty.',
           )}
         </p>
@@ -60,16 +60,16 @@ export function SessionReportView({ report }: { report: SessionReport }) {
       <Panel className="px-6 py-6">
         <h2 className="text-base font-medium">{tx('用時', 'Time spent')}</h2>
         <p className="mt-2 text-sm leading-relaxed text-muted">
-          {tx('最短係最有把握，最長係最猶豫。只描述呢一場用咗幾耐。', 'Shortest means most sure. Longest means most hesitant. This only describes time spent this session.')}
+          {tx('最短是最有把握，最長是最猶豫。這裡只描述這一場用了多久。', 'Shortest means most sure. Longest means most hesitant. This only describes time spent this session.')}
         </p>
         <TimeList title={tx('最有把握', 'Most sure')} empty={tx('未有作答時間。', 'No answer times yet.')} cards={report.sure} />
         <TimeList title={tx('最猶豫', 'Most hesitant')} empty={tx('未有作答時間。', 'No answer times yet.')} cards={report.hesitant} />
       </Panel>
 
       <Panel className="px-6 py-6">
-        <h2 className="text-base font-medium">{tx('每一組用咗幾耐', 'Time by group')}</h2>
+        <h2 className="text-base font-medium">{tx('每一組用了多久', 'Time by group')}</h2>
         {report.groups.length === 0 ? (
-          <p className="mt-3 text-sm text-muted">{tx('未有可以分組嘅選擇。', 'No choices to group yet.')}</p>
+          <p className="mt-3 text-sm text-muted">{tx('尚未有可以分組的選擇。', 'No choices to group yet.')}</p>
         ) : (
           <ul className="mt-3 space-y-2">
             {report.groups.map((group) => (
@@ -92,7 +92,7 @@ export function SessionReportView({ report }: { report: SessionReport }) {
         {report.watch.length === 0 ? (
           <p className="mt-3 text-sm leading-relaxed text-muted">
             {report.graded
-              ? tx('呢一場未有需要特別停低嘅一組。', 'No group needs a special pause this session.')
+              ? tx('這一場沒有需要特別停留的一組。', 'No group needs a special pause this session.')
               : tx('對照未齊，所以未標要注意。', 'The check is not complete, so nothing is marked yet.')}
           </p>
         ) : (
@@ -111,11 +111,11 @@ export function SessionReportView({ report }: { report: SessionReport }) {
         <h2 className="text-base font-medium">{tx('你較需要再停一停的地方', 'Lines to pause on')}</h2>
         {!report.graded ? (
           <p className="mt-3 text-sm leading-relaxed text-muted">
-            {tx('對照未齊，所以未列出全部答錯嘅卡。', 'The check is not complete, so the full list of missed cards is not here yet.')}
+            {tx('對照尚未齊全，所以未列出全部與參考方向不同的卡。', 'The check is not complete, so the full list of missed cards is not here yet.')}
           </p>
         ) : report.wrongCards.length === 0 ? (
           <p className="mt-3 text-sm leading-relaxed text-muted">
-            {tx('呢一場已核對嘅選擇都同參考方向相近。', 'Every checked choice this session was close to the reference.')}
+            {tx('這一場已核對的選擇都與參考方向相近。', 'Every checked choice this session was close to the reference.')}
           </p>
         ) : (
           <ul className="mt-4 space-y-4">
@@ -134,7 +134,7 @@ export function SessionReportView({ report }: { report: SessionReport }) {
       </Panel>
 
       <details className="rounded-[28px] border border-line bg-white px-6 py-4">
-        <summary className="cursor-pointer text-sm text-ink">{tx('每一張用咗幾耐', 'Time on each card')}</summary>
+        <summary className="cursor-pointer text-sm text-ink">{tx('每一張用了多久', 'Time on each card')}</summary>
         {report.cards.length === 0 ? (
           <p className="mt-3 text-sm text-muted">{tx('未有紀錄。', 'No record yet.')}</p>
         ) : (

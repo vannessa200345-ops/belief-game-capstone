@@ -37,7 +37,7 @@ export function SpeakControl() {
       ) : calledName ? (
         <p className="text-sm text-muted">{tx(`現在請 ${calledName} 發言。`, `${calledName} is invited to speak.`)}</p>
       ) : (
-        <p className="text-sm text-muted">{tx('如果想用咪講，可以先排隊。想打字就用上面個文字框。', 'Queue here only if you want the mic. For text, use the message box above.')}</p>
+        <p className="text-sm text-muted">{tx('如果想用麥克風發言，可以先排隊。想傳送文字，請使用上方的訊息框。', 'Queue here only if you want the microphone. To send text, use the message box above.')}</p>
       )}
       <div className="mt-3">
         {position != null ? (

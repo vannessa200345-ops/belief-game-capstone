@@ -6,6 +6,7 @@ import { BrandMark } from '@/components/BrandMark'
 import { CardWave } from '@/components/CardWave'
 import { TimeGlance } from '@/components/TimeGlance'
 import { HostMessage } from '@/components/HostMessage'
+import { HostMusic } from '@/components/HostMusic'
 import { Leaderboard } from '@/components/Leaderboard'
 import { NextStep } from '@/components/NextStep'
 import { SelfPaceNotice } from '@/components/SelfPaceNotice'
@@ -93,12 +94,15 @@ export function ControlPage() {
           </p>
         </div>
         <div className="mt-4">
+          <HostMusic />
+        </div>
+        <div className="mt-4">
           <NextStep label={tx('下一步：', 'Next: ')}>
             {state.room.phase === 'lobby'
-              ? tx('等人到齊，撳「開始答題」。卡序會喺呢一場打亂。', 'when people are in, press Start answering. Card order is shuffled for this room.')
+              ? tx('請等候參加者到齊，再按「開始答題」。卡牌次序會在這一場打亂。', 'When everyone is here, press Start answering. Card order is shuffled for this session.')
               : state.room.phase === 'final'
-                ? tx('撳學員個名，打開佢嘅整理做複盤。', 'open a learner’s name to see their summary for the debrief.')
-                : tx('睇條形。撳一條柱就見到係邊張卡，以及每人嘅答案同用時。學員可以傳字過嚟。', 'watch the bars. Click one to see the card, each person’s answer, and their time. Learners can text you.')}
+                ? tx('請按學員姓名，開啟其整理以進行複盤。', 'Press a learner’s name to open their summary for the debrief.')
+                : tx('請查看條形圖。按一下長條即可查看對應的卡片、各人的答案與所用時間。學員可傳送訊息。', 'Watch the bars. Press one to see the card, each person’s answer, and their time. Learners can send a message.')}
           </NextStep>
         </div>
 
@@ -144,7 +148,7 @@ export function ControlPage() {
               <Panel className="px-5 py-4">
                 <h2 className="text-base font-medium">{tx('學員整理', 'Learner summaries')}</h2>
                 <p className="mt-1 text-sm text-muted">
-                  {tx('打開就係佢呢一場嘅結果，只用呢場嘅選擇同用時。', 'Opens that person’s result for this session only.')}
+                  {tx('打開後是該學員這一場的結果，只用這一場的選擇與用時。', 'Opens that person’s result for this session only.')}
                 </p>
                 <ul className="mt-3 space-y-2">
                   {learners.map((row) => (
@@ -201,7 +205,7 @@ export function ControlPage() {
                               : row.done
                                 ? tx('已看完', 'finished')
                                 : row.stuck
-                                  ? tx(`停住 · ${row.answered}/${board.total}`, `paused · ${row.answered}/${board.total}`)
+                                  ? tx(`暫停於此 · ${row.answered}/${board.total}`, `paused · ${row.answered}/${board.total}`)
                                   : `${row.answered}/${board.total}`}
                         </span>
                       </li>
@@ -256,7 +260,7 @@ export function ControlPage() {
             <Panel className="px-5 py-5">
               <h2 className="text-base font-medium">{tx('發言隊列', 'Speaking queue')}</h2>
               <p className="mt-1 text-sm leading-relaxed text-muted">
-                {tx('這裡只排順序，不會自動取消 Zoom 靜音。傳字唔使排隊。', 'This only sets speaking order. It does not unmute Zoom. Text does not need the queue.')}
+                {tx('這裡只排列發言順序，不會自動取消 Zoom 靜音。傳送訊息不必排隊。', 'This only sets speaking order. It does not unmute Zoom. Messages do not need the queue.')}
               </p>
               {state.queue.length === 0 ? (
                 <p className="mt-4 text-sm text-ink">{tx('暫時沒有人想發言。', 'Nobody is waiting to speak.')}</p>

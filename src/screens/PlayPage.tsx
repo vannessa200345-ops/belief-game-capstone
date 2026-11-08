@@ -64,14 +64,14 @@ export function PlayPage() {
         </p>
         <div className="mt-3">
           <NextStep label={tx('下一步：', 'Next: ')}>
-            {tx('撳「是」或者「毫無道理」。選好就去下一張。', 'press Yes or No. The next card comes up on its own.')}
+            {tx('請按「是」或「毫無道理」。選定後即進入下一張。', 'Press Yes or No. The next card follows on its own.')}
           </NextStep>
         </div>
         <div className="mt-3">
           <SelfPaceNotice link={state.selfPaceLink} />
         </div>
         {paused ? (
-          <p className="mt-2 text-sm text-ink">{tx('主持暫停咗。先等一等，這一刻不能選。', 'The host paused the room. Wait here. You cannot choose yet.')}</p>
+          <p className="mt-2 text-sm text-ink">{tx('主持已暫停。請稍候，此刻不能選擇。', 'The host has paused the room. Please wait. You cannot choose yet.')}</p>
         ) : null}
 
         {card ? (

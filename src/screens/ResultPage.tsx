@@ -31,7 +31,7 @@ export function ResultPage() {
         <h1 className="mt-2 text-[1.7rem] font-medium leading-snug">{tx('這一輪先到這裡', 'That is this round')}</h1>
         <div className="mt-3">
           <NextStep label={tx('下一步：', 'Next: ')}>
-            {tx('等下一張自己出現。想講嘢可以傳字，唔使開咪。', 'wait for the next card. Text the host if you want to say something. No mic needed.')}
+            {tx('請等候下一張出現。如需發言，可以傳送訊息，不必開麥克風。', 'Wait for the next card. If you want to speak, send a message. No microphone is needed.')}
           </NextStep>
         </div>
         {card ? (

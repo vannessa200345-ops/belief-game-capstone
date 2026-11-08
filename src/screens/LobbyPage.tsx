@@ -7,7 +7,7 @@ import { SelfPaceNotice } from '@/components/SelfPaceNotice'
 import { Frame } from '@/components/Frame'
 import { Panel } from '@/components/Panel'
 import { Button } from '@/components/ui/button'
-import { ROOM_CAPACITY, ROOM_IDEAL } from '@/domain/constants'
+import { ROOM_IDEAL } from '@/domain/constants'
 import { deckMeta } from '@/domain/cards'
 import { youPlayer } from '@/domain/selectors'
 import { useLang } from '@/i18n/lang'
@@ -37,7 +37,7 @@ export function LobbyPage() {
         </h1>
         <div className="mt-4">
           <NextStep label={tx('下一步：', 'Next: ')}>
-            {tx('等主持撳「開始答題」。你唔使做其他嘢。', 'wait for the host to press Start answering. You do not need to do anything else.')}
+            {tx('請等候主持按「開始答題」。你不需要做其他事情。', 'Wait for the host to press Start answering. You do not need to do anything else.')}
           </NextStep>
         </div>
 
@@ -49,8 +49,8 @@ export function LobbyPage() {
           <p className="mt-1 text-sm text-muted">{lang === 'en' ? deck.noteEn : deck.note}</p>
           <p className="mt-5 text-sm leading-relaxed text-muted">
             {tx(
-              `在場 ${state.players.length} 人。理想約 ${ROOM_IDEAL} 人，上限 ${ROOM_CAPACITY} 人。`,
-              `${state.players.length} people here. Ideal about ${ROOM_IDEAL}, maximum ${ROOM_CAPACITY}.`,
+              `在場 ${state.players.length} 人。理想約 ${ROOM_IDEAL} 人。`,
+              `${state.players.length} people here. About ${ROOM_IDEAL} is a comfortable class size.`,
             )}
           </p>
           {you ? <p className="mt-3 text-sm text-ink">{tx(`這一場稱你為${you.name}。`, `This session calls you ${you.name}.`)}</p> : null}

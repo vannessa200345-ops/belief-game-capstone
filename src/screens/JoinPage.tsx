@@ -66,7 +66,7 @@ function ArriveStep({ inviteCode, onEnter }: { inviteCode: string; onEnter: () =
             <p className="mt-4 text-sm text-muted">
               {tx('房間', 'Room')} <span className="font-latin tracking-[0.16em] text-ink">{inviteCode}</span>
             </p>
-            <QuietCode label={tx('唔係呢間房？', 'Not this room?')} onCode={useManualCode} />
+            <QuietCode label={tx('不是這間房？', 'Not this room?')} onCode={useManualCode} />
             <Button type="button" className={`mt-5 ${enterButtonClass}`} onClick={onEnter}>
               {tx('進入房間', 'Enter the room')}
             </Button>
@@ -168,10 +168,10 @@ function NameStep({ code, onBack }: { code: string; onBack: () => void }) {
           {tx('房間', 'Room')} <span className="font-latin tracking-[0.16em] text-ink">{code}</span>
         </p>
         <h1 className="mt-2 text-[1.85rem] font-medium leading-snug text-ink md:text-[2.15rem]">
-          {tx('點稱呼你', 'What should we call you')}
+          {tx('如何稱呼你', 'What should we call you')}
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-muted">
-          {tx('主持同埋呢場嘅人會見到呢個名。', 'The host and people in this session will see this name.')}
+          {tx('主持與本場參加者都會看到這個名字。', 'The host and people in this session will see this name.')}
         </p>
         <form className="mt-6" noValidate onSubmit={(event) => void onSubmit(event)}>
           <label className="block max-w-xs md:max-w-lg">
@@ -238,7 +238,7 @@ function QuietCode({ label, onCode }: { label: string; onCode: (code: string) =>
           />
         </label>
         <button type="submit" className="mt-2 text-sm text-muted underline decoration-line underline-offset-4 hover:text-ink">
-          {tx('用呢個碼', 'Use this code')}
+          {tx('使用此房間碼', 'Use this code')}
         </button>
       </form>
     </details>

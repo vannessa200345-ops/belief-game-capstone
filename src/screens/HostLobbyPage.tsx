@@ -10,7 +10,7 @@ import { Panel } from '@/components/Panel'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DECKS, deckMeta } from '@/domain/cards'
-import { ROOM_CAPACITY, ROOM_IDEAL } from '@/domain/constants'
+import { ROOM_IDEAL } from '@/domain/constants'
 import { phaseLabel } from '@/domain/format'
 import type { DeckId } from '@/domain/types'
 import { useLang } from '@/i18n/lang'
@@ -96,10 +96,10 @@ export function HostLobbyPage() {
   }
 
   const nextCopy = !hasRoom
-    ? tx('揀一套牌，撳「開出房間碼」。', 'pick a deck, then press Open a room code.')
+    ? tx('請選擇一套牌，再按「開出房間碼」。', 'Choose a deck, then press Open a room code.')
     : inLobby
-      ? tx('複製加入連結俾學員，等佢哋入房，然後撳「開始答題」。', 'copy the join link for learners, then press Start answering.')
-      : tx('撳「回到主持台」睇進度。', 'press Back to the console to see progress.')
+      ? tx('請複製加入連結給學員，待他們進入房間後，按「開始答題」。', 'Copy the join link for learners. After they enter, press Start answering.')
+      : tx('請按「回到主持台」查看進度。', 'Press Back to the console to see progress.')
 
   return (
     <Frame width="host">
@@ -190,10 +190,10 @@ export function HostLobbyPage() {
             <p className="mt-2 text-sm leading-relaxed text-muted">
               {demos > 0
                 ? tx(
-                    `示範學員 ${demos} 人，真實進入 ${real} 人。理想約 ${ROOM_IDEAL} 人，上限 ${ROOM_CAPACITY} 人。`,
-                    `${demos} demo learners, ${real} real. Ideal about ${ROOM_IDEAL}, maximum ${ROOM_CAPACITY}.`,
+                    `示範學員 ${demos} 人，真實進入 ${real} 人。理想約 ${ROOM_IDEAL} 人。`,
+                    `${demos} demo learners, ${real} real. About ${ROOM_IDEAL} is a comfortable class size.`,
                   )
-                : tx(`理想約 ${ROOM_IDEAL} 人，上限 ${ROOM_CAPACITY} 人。`, `Ideal about ${ROOM_IDEAL}, maximum ${ROOM_CAPACITY}.`)}
+                : tx(`理想約 ${ROOM_IDEAL} 人。`, `About ${ROOM_IDEAL} is a comfortable class size.`)}
             </p>
             <div className="mt-5 h-px w-8 bg-gold" aria-hidden="true" />
             <p className="mt-4 text-sm text-muted">{tx('最近加入', 'Joined recently')}</p>
@@ -225,8 +225,8 @@ export function HostLobbyPage() {
             <Panel className="mt-3 px-6 py-6">
               <p className="text-sm leading-relaxed text-muted">
                 {hasRoom
-                  ? tx('開新場會結束現在這間房。學員要用新的房間碼再進入。新一場會再打亂卡序。', 'A new room ends this one. Learners need the new code. Card order is shuffled again.')
-                  : tx('選一套句子，再開出房間碼。學員用連結進來。', 'Pick a deck, then open a room code. Learners join with the link.')}
+                  ? tx('開設新的場次會結束現在這間房間。學員須使用新的房間碼再次進入。新的場次會重新打亂卡序。', 'Opening a new room ends this one. Learners need the new code. Card order is shuffled again.')
+                  : tx('請先選擇一套牌，再開出房間碼。學員透過連結加入。', 'Choose a deck, then open a room code. Learners join with the link.')}
               </p>
               <label className="mt-4 block">
                 <span className="text-sm text-ink">{tx('你的名字', 'Your name')}</span>
@@ -236,7 +236,7 @@ export function HostLobbyPage() {
                   onChange={(event) => setHostName(event.target.value)}
                   autoComplete="name"
                   maxLength={32}
-                  placeholder={tx('主持怎樣稱呼', 'What should we call the host')}
+                  placeholder={tx('主持的稱呼', 'Host name')}
                 />
               </label>
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
@@ -257,7 +257,7 @@ export function HostLobbyPage() {
                 ))}
               </div>
               <Button className="mt-4" onClick={() => void create()} disabled={pending != null}>
-                {pending === 'create' ? tx('正在開場', 'Opening') : hasRoom ? tx('確認開新場', 'Open the new room') : tx('開出房間碼', 'Open a room code')}
+                {pending === 'create' ? tx('正在開場', 'Opening') : hasRoom ? tx('確認開設新場次', 'Open the new room') : tx('開出房間碼', 'Open a room code')}
               </Button>
             </Panel>
           ) : null}

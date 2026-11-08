@@ -44,7 +44,7 @@ export async function downloadSessionReport(report: SessionReport, format: 'png'
   }
 
   const zh = lang !== 'en'
-  push(zh ? `${report.name} · 呢一場整理` : `${report.name} · this session`, 28, 16)
+  push(zh ? `${report.name} · 這一場整理` : `${report.name} · this session`, 28, 16)
   push(
     zh
       ? `答中 ${report.correct} · 與參考方向不同 ${report.wrong} · 還沒選 ${report.missed} · 平均用了 ${formatSeconds(report.avgMs, lang)}`
@@ -53,7 +53,7 @@ export async function downloadSessionReport(report: SessionReport, format: 'png'
     18,
     '#6b6570',
   )
-  push(zh ? '時間只係分析，唔會扣分。' : 'Time is analysis only. It is not a penalty.', 16, 22, '#6b6570')
+  push(zh ? '時間只是分析，不會扣分。' : 'Time is analysis only. It is not a penalty.', 16, 22, '#6b6570')
 
   if (report.sure.length > 0) {
     push(zh ? '最有把握（用時最短）' : 'Most sure (shortest time)', 20, 10)
@@ -68,7 +68,7 @@ export async function downloadSessionReport(report: SessionReport, format: 'png'
     }
   }
 
-  push(zh ? '每一組用咗幾耐' : 'Time by group', 20, 12)
+  push(zh ? '每一組用了多久' : 'Time by group', 20, 12)
   for (const group of report.groups) {
     push(
       zh
@@ -87,13 +87,13 @@ export async function downloadSessionReport(report: SessionReport, format: 'png'
   push(zh ? '你較需要再停一停的地方' : 'Lines to pause on', 22, 12)
   if (!report.graded) {
     push(
-      zh ? '呢一場仲未有完整對照，所以未列出答錯嘅卡。' : 'This session does not have a full check yet, so wrong cards are not listed.',
+      zh ? '這一場尚未有完整對照，所以未列出與參考方向不同的卡。' : 'This session does not have a full check yet, so wrong cards are not listed.',
       16,
       8,
       '#6b6570',
     )
   } else if (report.wrongCards.length === 0) {
-    push(zh ? '呢一場已核對嘅選擇都同參考方向相近。' : 'Every checked choice in this session was close to the reference.', 16, 8)
+    push(zh ? '這一場已核對的選擇都與參考方向相近。' : 'Every checked choice in this session was close to the reference.', 16, 8)
   }
 
   const images = await Promise.all(report.wrongCards.map((card) => loadImage(card.imageSrc)))

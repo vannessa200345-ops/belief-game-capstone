@@ -1,6 +1,7 @@
 /** URL for a file in `public/`, under Vite `base`. */
 export function publicAsset(path: string): string {
-  return `${import.meta.env.BASE_URL}${path.replace(/^\/+/, '')}`
+  const base = typeof import.meta.env?.BASE_URL === 'string' ? import.meta.env.BASE_URL : '/'
+  return `${base}${path.replace(/^\/+/, '')}`
 }
 
 /** Browser pathname including the GitHub Pages project prefix. */

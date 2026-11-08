@@ -1,10 +1,11 @@
 import { cardAt, cardsFor, deckHasAnswerKey, findCard } from '../domain/cards.ts'
+import { findTrack } from '../domain/musicTracks.ts'
+import { nextMusic, type MusicAction } from '../domain/playback.ts'
 import { clearPace } from '../self/pace.ts'
 import {
   DEMO_NAMES,
   DEMO_ROOM_CODE,
   OFFLINE_DEMO_NAME,
-  ROOM_CAPACITY,
   STORAGE_KEY,
 } from '../domain/constants.ts'
 import { parseNoticeEmail } from '../domain/email.ts'
@@ -92,6 +93,9 @@ function createSeed(code: string, deck: DeckId): PersistedState {
     notes: [],
     remoteAnswered: {},
     serverAnswerCount: 0,
+    remoteCorrect: {},
+    scoresReady: true,
+    music: null,
   }
 }
 
@@ -102,6 +106,9 @@ function hydrate(state: PersistedState): PersistedState {
     notes: Array.isArray(state.notes) ? state.notes : [],
     remoteAnswered: state.remoteAnswered ?? {},
     serverAnswerCount: state.serverAnswerCount ?? 0,
+    remoteCorrect: state.remoteCorrect ?? {},
+    scoresReady: state.scoresReady ?? true,
+    music: state.music ?? null,
     players: state.players.map((player) => ({
       ...player,
       email: typeof player.email === 'string' && player.email.length > 0 ? player.email : null,
@@ -434,10 +441,6 @@ export async function joinRoom(input: { code: string; name: string; email?: stri
       result = { ok: true }
       return false
     }
-    if (draft.players.length >= ROOM_CAPACITY) {
-      result = { ok: false, error: tx('這個房間已滿三十人。', 'This room is full at thirty people.') }
-      return false
-    }
     const player: Player = {
       id: `you-${crypto.randomUUID()}`,
       name: cleanedName,
@@ -629,7 +632,7 @@ export async function pauseRoom() {
 export async function sendNote(text: string, fromHost = false): Promise<ActionResult> {
   const cleaned = text.trim().slice(0, 240)
   if (!cleaned) return { ok: false, error: tx('請先寫一句。', 'Write a line first.') }
-  let result: ActionResult = { ok: false, error: tx('而家仲未可以傳字。', 'You cannot text yet.') }
+  let result: ActionResult = { ok: false, error: tx('現在還不能傳送訊息。', 'You cannot send a message yet.') }
   await commit((draft) => {
     const phase = draft.room.phase
     if (phase !== 'playing' && phase !== 'paused' && phase !== 'final') return false
@@ -676,6 +679,22 @@ export async function advanceSpeaker() {
     return true
   })
   return { ok: true as const }
+}
+
+export async function setRoomMusic(input: { trackId: string; action: MusicAction }): Promise<ActionResult> {
+  if (!findTrack(input.trackId)) return { ok: false, error: tx('找不到這首曲目。', 'That track was not found.') }
+  const markedHost = memory.players.some((player) => player.host)
+  const you = memory.players.find((player) => player.id === memory.youId)
+  if (markedHost && !you?.host) {
+    return { ok: false, error: tx('只有主持可以控制背景音樂。', 'Only the host can control the music.') }
+  }
+  await commit((draft) => {
+    const next = nextMusic(draft.music ?? null, input.action, input.trackId, Date.now())
+    if (next === (draft.music ?? null)) return false
+    draft.music = next
+    return true
+  })
+  return { ok: true }
 }
 
 export function readState() {
