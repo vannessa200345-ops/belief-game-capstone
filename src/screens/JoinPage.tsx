@@ -2,6 +2,7 @@ import { useRef, useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api } from '@/api'
 import { BrandMark } from '@/components/BrandMark'
+import { FreeNote } from '@/components/FreeNote'
 import { Frame } from '@/components/Frame'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -74,11 +75,19 @@ function ArriveStep({ inviteCode, onEnter }: { inviteCode: string; onEnter: () =
         ) : (
           <HomeContinue />
         )}
-        <p className="mt-8">
-          <Link to="/host" className="text-sm text-muted underline decoration-line underline-offset-4 hover:text-ink">
-            {tx('我是主持', 'I am the host')}
-          </Link>
-        </p>
+        <div className="mt-8 space-y-3">
+          <FreeNote />
+          <p>
+            <Link to="/book" className="text-sm text-muted underline decoration-line underline-offset-4 hover:text-ink">
+              {tx('預約場次', 'Book a session')}
+            </Link>
+          </p>
+          <p>
+            <Link to="/host" className="text-sm text-muted underline decoration-line underline-offset-4 hover:text-ink">
+              {tx('我是主持', 'I am the host')}
+            </Link>
+          </p>
+        </div>
       </main>
     </Frame>
   )

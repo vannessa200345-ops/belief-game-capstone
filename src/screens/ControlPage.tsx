@@ -4,6 +4,7 @@ import { api } from '@/api'
 import { useGame } from '@/api/useGame'
 import { BrandMark } from '@/components/BrandMark'
 import { CardWave } from '@/components/CardWave'
+import { LiveTally } from '@/components/LiveTally'
 import { TimeGlance } from '@/components/TimeGlance'
 import { HostMessage } from '@/components/HostMessage'
 import { Leaderboard } from '@/components/Leaderboard'
@@ -164,6 +165,7 @@ export function ControlPage() {
 
             {state.room.phase === 'playing' || state.room.phase === 'paused' ? (
               <>
+                <LiveTally />
                 <div className="grid grid-cols-3 gap-3">
                   <CountTile label={tx('學員', 'Learners')} value={board.learners} bar="bg-sky" />
                   <CountTile label={tx('已看完', 'Finished')} value={board.finished} bar="bg-mint" />

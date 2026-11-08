@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { api } from '@/api'
 import { useGame } from '@/api/useGame'
 import { BrandMark } from '@/components/BrandMark'
+import { LiveTally } from '@/components/LiveTally'
 import { SelfPaceNotice } from '@/components/SelfPaceNotice'
 import { Frame } from '@/components/Frame'
 import { NextStep } from '@/components/NextStep'
@@ -121,6 +122,11 @@ export function HostLobbyPage() {
         <div className="mt-4 max-w-xl">
           <NextStep label={tx('下一步：', 'Next: ')}>{nextCopy}</NextStep>
         </div>
+        {state.room.phase === 'playing' || state.room.phase === 'paused' ? (
+          <div className="mt-4 max-w-xl">
+            <LiveTally variant="compact" />
+          </div>
+        ) : null}
 
         <div className="mt-8 grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
           <Panel className="px-6 py-6">

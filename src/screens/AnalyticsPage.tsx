@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useGame } from '@/api/useGame'
 import { BrandMark } from '@/components/BrandMark'
+import { LiveTally } from '@/components/LiveTally'
 import { Frame } from '@/components/Frame'
 import { Panel } from '@/components/Panel'
 import { TimeGlance } from '@/components/TimeGlance'
@@ -47,6 +48,16 @@ export function AnalyticsPage() {
             'Start with the cards that differed most, who has not chosen, and average time spent. Time is analysis only, not a penalty. Per-card scores stay hidden until you turn them on.',
           )}
         </p>
+
+        {state.room.phase === 'playing' || state.room.phase === 'paused' ? (
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink">
+            {tx('本場仍在進行。以下數字會隨作答更新，不必等到結束。', 'This session is still in progress. The figures below update as answers arrive. You do not wait until the end.')}
+          </p>
+        ) : null}
+
+        <div className="mt-8">
+          <LiveTally />
+        </div>
 
         <div className="mt-8">
           <TimeGlance />

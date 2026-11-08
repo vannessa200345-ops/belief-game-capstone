@@ -36,6 +36,20 @@ VITE_SUPABASE_ANON_KEY=
 
 Do not commit `.env`. The Pages workflow builds with the public anon key only. Never add a `service_role` key.
 
+## Host password and bookings
+
+Apply `supabase/migrations/20261108150000_host_pin_and_bookings.sql` in the Supabase SQL editor, then reload the API schema cache. This frontend cannot change the live database by itself.
+
+`/host` asks for a six-digit password before the host controls. The check is a security-definer database function. The platform operator credential is seeded as a bcrypt hash only. Do not put that PIN in `VITE_` environment variables or in frontend source.
+
+A renter sets a different password for their own session at `/host/setup`, using a one-time claim code from the schedule. Players still join `/r/ROOMCODE` with no password.
+
+`/book` lists group slots and one-on-one teachers. The host chooses a slot capacity from 1 to 30. This migration does not change `rooms.max_players` and does not remove the technical room cap.
+
+After the host password is accepted, the console and `/host/analytics` stay available during play. Live scoring adds matched, differed, and unchecked totals from choices already stored for this session. It does not invent scores, and it does not count the host or demo learners.
+
+Andy is bookable for one-on-one. Vanessa is on `teachers` with `bookable = false` until that row is enabled. The first public sessions are free to join. Donations are welcome, and the booking flow does not require payment first.
+
 ## Try the pictured decks
 
 ```bash
