@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { api } from '@/api'
 import { useGame } from '@/api/useGame'
 import { BrandMark } from '@/components/BrandMark'
@@ -9,6 +10,7 @@ import { NextStep } from '@/components/NextStep'
 import { SelfPaceNotice } from '@/components/SelfPaceNotice'
 import { SessionReportView } from '@/components/SessionReportView'
 import { Frame } from '@/components/Frame'
+import { Panel } from '@/components/Panel'
 import { Button } from '@/components/ui/button'
 import { buildSessionReport, type ReportAnswer } from '@/domain/report'
 import { youPlayer } from '@/domain/selectors'
@@ -105,6 +107,18 @@ export function FinalPage() {
         <div className="mt-4">
           <HostMessage audience="player" />
         </div>
+        <Panel className="mt-6 px-6 py-6">
+          <h2 className="text-base font-medium">{tx('如希望繼續，可以預約一對一', 'If you want to continue, book a one-on-one')}</h2>
+          <p className="mt-3 text-sm leading-relaxed text-muted">
+            {tx(
+              '小組場次之後，可以預約一對一。現時可預約 Andy 的希塔療癒。約一小時，費用 HKD 800，本頁只作登記。',
+              'After the group session, you can book a one-on-one. Andy’s Theta Healing is available now. About one hour, HKD 800. This page only registers it.',
+            )}
+          </p>
+          <Button className="mt-4" asChild>
+            <Link to="/book?focus=one">{tx('預約一對一', 'Book a one-on-one')}</Link>
+          </Button>
+        </Panel>
         <Button className="mt-6" variant="ghost" onClick={() => void leave()} disabled={pending}>
           {tx('離開房間', 'Leave the room')}
         </Button>

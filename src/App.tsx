@@ -3,11 +3,18 @@ import { useLang } from '@/i18n/lang'
 import { ConnectionGate } from '@/components/Connection'
 import { Frame } from '@/components/Frame'
 import { PlayerSync } from '@/components/PlayerSync'
+import { HostAccessProvider } from '@/host/access'
 import { AnalyticsPage } from '@/screens/AnalyticsPage'
+import { AboutPage } from '@/screens/AboutPage'
+import { BookingPage } from '@/screens/BookingPage'
+import { CoursesPage } from '@/screens/CoursesPage'
 import { ControlPage } from '@/screens/ControlPage'
 import { FinalPage } from '@/screens/FinalPage'
 import { HostDebriefPage } from '@/screens/HostDebriefPage'
+import { HostGate } from '@/screens/HostGate'
 import { HostLobbyPage } from '@/screens/HostLobbyPage'
+import { HostSchedulePage } from '@/screens/HostSchedulePage'
+import { HostSetupPage } from '@/screens/HostSetupPage'
 import { JoinPage } from '@/screens/JoinPage'
 import { LobbyPage } from '@/screens/LobbyPage'
 import { PlayPage } from '@/screens/PlayPage'
@@ -25,6 +32,9 @@ function MissingPage() {
         <p className="mt-6 flex gap-4 text-sm">
           <Link to="/" className="underline decoration-line underline-offset-4">
             {tx('學員入口', 'Student entrance')}
+          </Link>
+          <Link to="/book" className="underline decoration-line underline-offset-4">
+            {tx('預約場次', 'Book a session')}
           </Link>
           <Link to="/host" className="underline decoration-line underline-offset-4">
             {tx('主持開場', 'Host desk')}
@@ -47,19 +57,28 @@ export default function App() {
       </a>
       <PlayerSync />
       <ConnectionGate>
-        <Routes>
-          <Route path="/" element={<JoinPage />} />
-          <Route path="/r/:code" element={<JoinPage />} />
-          <Route path="/play/lobby" element={<LobbyPage />} />
-          <Route path="/play" element={<PlayPage />} />
-          <Route path="/play/result" element={<ResultPage />} />
-          <Route path="/play/final" element={<FinalPage />} />
-          <Route path="/host" element={<HostLobbyPage />} />
-          <Route path="/host/control" element={<ControlPage />} />
-          <Route path="/host/analytics" element={<AnalyticsPage />} />
-          <Route path="/host/debrief/:playerId" element={<HostDebriefPage />} />
-          <Route path="*" element={<MissingPage />} />
-        </Routes>
+        <HostAccessProvider>
+          <Routes>
+            <Route path="/" element={<JoinPage />} />
+            <Route path="/r/:code" element={<JoinPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/courses" element={<CoursesPage />} />
+            <Route path="/book" element={<BookingPage />} />
+            <Route path="/play/lobby" element={<LobbyPage />} />
+            <Route path="/play" element={<PlayPage />} />
+            <Route path="/play/result" element={<ResultPage />} />
+            <Route path="/play/final" element={<FinalPage />} />
+            <Route path="/host/setup" element={<HostSetupPage />} />
+            <Route element={<HostGate />}>
+              <Route path="/host" element={<HostLobbyPage />} />
+              <Route path="/host/schedule" element={<HostSchedulePage />} />
+              <Route path="/host/control" element={<ControlPage />} />
+              <Route path="/host/analytics" element={<AnalyticsPage />} />
+              <Route path="/host/debrief/:playerId" element={<HostDebriefPage />} />
+            </Route>
+            <Route path="*" element={<MissingPage />} />
+          </Routes>
+        </HostAccessProvider>
       </ConnectionGate>
     </>
   )

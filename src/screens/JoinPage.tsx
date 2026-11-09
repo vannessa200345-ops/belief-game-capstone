@@ -2,6 +2,7 @@ import { useRef, useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api } from '@/api'
 import { BrandMark } from '@/components/BrandMark'
+import { PublicNav } from '@/components/PublicNav'
 import { Frame } from '@/components/Frame'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -55,7 +56,9 @@ function ArriveStep({ inviteCode, onEnter }: { inviteCode: string; onEnter: () =
   }
 
   return (
-    <Frame width="entry">
+    <>
+      <PublicNav tone="slim" />
+      <Frame width="entry">
       <main id="main">
         <BrandMark singleLine />
         {inviteCode ? (
@@ -80,7 +83,8 @@ function ArriveStep({ inviteCode, onEnter }: { inviteCode: string; onEnter: () =
           </Link>
         </p>
       </main>
-    </Frame>
+      </Frame>
+    </>
   )
 }
 
@@ -161,7 +165,9 @@ function NameStep({ code, onBack }: { code: string; onBack: () => void }) {
   }
 
   return (
-    <Frame width="entry">
+    <>
+      <PublicNav tone="slim" />
+      <Frame width="entry">
       <main id="main">
         <BrandMark singleLine />
         <p className="mt-8 text-sm text-muted">
@@ -204,7 +210,8 @@ function NameStep({ code, onBack }: { code: string; onBack: () => void }) {
           {tx('返回', 'Back')}
         </button>
       </main>
-    </Frame>
+      </Frame>
+    </>
   )
 }
 

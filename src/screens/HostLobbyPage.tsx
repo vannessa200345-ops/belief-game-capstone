@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { api } from '@/api'
 import { useGame } from '@/api/useGame'
 import { BrandMark } from '@/components/BrandMark'
+import { LiveTally } from '@/components/LiveTally'
 import { SelfPaceNotice } from '@/components/SelfPaceNotice'
 import { Frame } from '@/components/Frame'
 import { NextStep } from '@/components/NextStep'
@@ -10,7 +11,6 @@ import { Panel } from '@/components/Panel'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DECKS, deckMeta } from '@/domain/cards'
-import { ROOM_CAPACITY, ROOM_IDEAL } from '@/domain/constants'
 import { phaseLabel } from '@/domain/format'
 import type { DeckId } from '@/domain/types'
 import { useLang } from '@/i18n/lang'
@@ -121,6 +121,11 @@ export function HostLobbyPage() {
         <div className="mt-4 max-w-xl">
           <NextStep label={tx('下一步：', 'Next: ')}>{nextCopy}</NextStep>
         </div>
+        {state.room.phase === 'playing' || state.room.phase === 'paused' ? (
+          <div className="mt-4 max-w-xl">
+            <LiveTally variant="compact" />
+          </div>
+        ) : null}
 
         <div className="mt-8 grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
           <Panel className="px-6 py-6">
@@ -189,11 +194,8 @@ export function HostLobbyPage() {
             </p>
             <p className="mt-2 text-sm leading-relaxed text-muted">
               {demos > 0
-                ? tx(
-                    `示範學員 ${demos} 人，真實進入 ${real} 人。理想約 ${ROOM_IDEAL} 人，上限 ${ROOM_CAPACITY} 人。`,
-                    `${demos} demo learners, ${real} real. Ideal about ${ROOM_IDEAL}, maximum ${ROOM_CAPACITY}.`,
-                  )
-                : tx(`理想約 ${ROOM_IDEAL} 人，上限 ${ROOM_CAPACITY} 人。`, `Ideal about ${ROOM_IDEAL}, maximum ${ROOM_CAPACITY}.`)}
+                ? tx(`示範學員 ${demos} 人，真實進入 ${real} 人。`, `${demos} demo learners, ${real} real.`)
+                : tx(`真實進入 ${real} 人。`, `${real} real.`)}
             </p>
             <div className="mt-5 h-px w-8 bg-gold" aria-hidden="true" />
             <p className="mt-4 text-sm text-muted">{tx('最近加入', 'Joined recently')}</p>

@@ -36,6 +36,26 @@ VITE_SUPABASE_ANON_KEY=
 
 Do not commit `.env`. The Pages workflow builds with the public anon key only. Never add a `service_role` key.
 
+## Host password and bookings
+
+Apply `supabase/migrations/20261108150000_host_pin_and_bookings.sql` in the Supabase SQL editor, then reload the API schema cache. This frontend cannot change the live database by itself.
+
+`/host` asks for a six-digit password before the host controls. The check is a security-definer database function. The platform operator credential is seeded as a bcrypt hash only. Do not put that PIN in `VITE_` environment variables or in frontend source.
+
+A renter sets a different password for their own session at `/host/setup`, using a one-time claim code from the schedule. Players still join `/r/ROOMCODE` with no password.
+
+`/book` lists group slots and one-on-one teachers. A booking session stores 200 registrations internally. The host does not set a room limit, and creating a room still sends `p_max_players` as null. Apply `20261108200000_booking_session_capacity.sql` so the database accepts that session size.
+
+After the host password is accepted, the console and `/host/analytics` stay available during play. Live scoring shows the match rate, people present, and how many cards already have a checked answer. Totals still come only from checked choices in this session. The host and demo learners are not scored. A projector control only enlarges that panel.
+
+Public pages use a top bar, not a sidebar: `/about`, `/courses`, `/book`, and the enter-room screen. `/` and `/r/ROOMCODE` stay a room-code form, with only a slim top bar. The host desk keeps its own links and does not use that marketing bar.
+
+`/book` is a separate page from the game enter screen at `/` and `/r/ROOMCODE`. The enter screen only takes a room code and a name. Booking is not shown there.
+
+`/book` starts with two services: a group session marked 隨緣樂助 (give as you wish, no advance payment) and a one-on-one of about one hour at HKD 800. The page registers the time and does not take payment. Andy (Theta Healing) can be chosen. Only Andy (Theta Healing) is offered in the public pickers. Apply `20261108190000_vanessa_not_bookable.sql` after the earlier booking migrations so production sets Vanessa `bookable` back to false. She stays in the table and can be opened again later.
+
+Andy is the bookable one-on-one teacher. Group sessions are give as you wish, and the booking flow does not require payment first.
+
 ## Try the pictured decks
 
 ```bash

@@ -4,7 +4,6 @@ import {
   DEMO_NAMES,
   DEMO_ROOM_CODE,
   OFFLINE_DEMO_NAME,
-  ROOM_CAPACITY,
   STORAGE_KEY,
 } from '../domain/constants.ts'
 import { parseNoticeEmail } from '../domain/email.ts'
@@ -432,10 +431,6 @@ export async function joinRoom(input: { code: string; name: string; email?: stri
     }
     if (draft.youId && draft.players.some((player) => player.id === draft.youId)) {
       result = { ok: true }
-      return false
-    }
-    if (draft.players.length >= ROOM_CAPACITY) {
-      result = { ok: false, error: tx('這個房間已滿三十人。', 'This room is full at thirty people.') }
       return false
     }
     const player: Player = {
