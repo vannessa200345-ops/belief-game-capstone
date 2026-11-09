@@ -63,7 +63,9 @@ export function BookingPage() {
   }, [])
 
   const offeredTeachers = teachers.filter((item) => item.bookable)
-  const teacher = offeredTeachers.find((item) => item.id === teacherId) ?? null
+  const pickedTeacher = offeredTeachers.find((item) => item.id === teacherId) ?? null
+  const onlyTeacher = offeredTeachers.length === 1 ? offeredTeachers[0] : null
+  const teacher = pickedTeacher ?? onlyTeacher
   const closedNames = new Set(teachers.filter((item) => !item.bookable).map((item) => item.name))
   const slot = slots.find((item) => item.id === slotId) ?? null
   const openSlots = slots.filter(
@@ -199,33 +201,37 @@ export function BookingPage() {
                 <h2 id="pick-host" className="text-lg font-medium">{tx('選擇導師', 'Choose a teacher')}</h2>
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
                   {offeredTeachers.map((item) => (
-                    <div
+                    <TeacherOption
                       key={item.id}
-                      className={cn(
-                        'rounded-[28px] border px-6 py-6',
-                        teacherId === item.id ? 'border-pink bg-blush' : 'border-line bg-white',
-                      )}
-                    >
-                      <button type="button" className="w-full text-left" aria-pressed={teacherId === item.id} onClick={() => chooseTeacher(item)}>
-                        <span className="block text-lg text-ink">{item.name}</span>
-                        <span className="mt-3 block text-sm leading-relaxed text-muted">
-                          {lang === 'en' ? item.summaryEn : item.summary}
-                        </span>
-                      </button>
-                      {item.slug === 'andy' ? (
-                        <div className="mt-4">
-                          <AndyPublicFacts />
-                        </div>
-                      ) : null}
-                    </div>
+                      teacher={item}
+                      selected={teacher?.id === item.id}
+                      onSelect={() => chooseTeacher(item)}
+                    />
                   ))}
                 </div>
                 {offeredTeachers.length === 0 && !loading ? (
                   <p className="mt-4 text-sm text-muted">{tx('暫時沒有可預約的導師。', 'No teachers are open for booking yet.')}</p>
                 ) : null}
+                {!teacher && offeredTeachers.length > 0 ? (
+                  <p id="teacher-required" className="mt-4 text-sm text-ink">
+                    {tx('請先選擇一位導師。', 'Choose a teacher first.')}
+                  </p>
+                ) : null}
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Button variant="ghost" onClick={() => setStep(1)}>{tx('返回', 'Back')}</Button>
-                  <Button size="lg" disabled={!teacher?.bookable} onClick={() => setStep(3)}>
+                  <Button
+                    size="lg"
+                    disabled={!teacher?.bookable}
+                    aria-describedby={!teacher && offeredTeachers.length > 0 ? 'teacher-required' : undefined}
+                    onClick={() => {
+                      if (!teacher?.bookable) return
+                      if (teacherId !== teacher.id) {
+                        setTeacherId(teacher.id)
+                        setSlotId('')
+                      }
+                      setStep(3)
+                    }}
+                  >
                     {tx('下一步：選擇時間', 'Next: choose a time')}
                   </Button>
                 </div>
@@ -306,6 +312,52 @@ export function BookingPage() {
   )
 }
 
+function TeacherOption({
+  teacher,
+  selected,
+  onSelect,
+}: {
+  teacher: PublicTeacher
+  selected: boolean
+  onSelect: () => void
+}) {
+  const { lang, tx } = useLang()
+  return (
+    <div
+      className={cn(
+        'cursor-pointer rounded-[28px] border px-6 py-6 text-left focus-within:ring-2 focus-within:ring-lavender',
+        selected ? 'border-pink bg-blush' : 'border-line bg-white hover:border-pink',
+      )}
+      onClick={onSelect}
+    >
+      <button
+        type="button"
+        className="w-full text-left focus-visible:outline-none"
+        aria-pressed={selected}
+        onClick={(event) => {
+          event.stopPropagation()
+          onSelect()
+        }}
+      >
+        <span className="flex items-start justify-between gap-3">
+          <span className="text-lg text-ink">{teacher.name}</span>
+          <span className={cn('shrink-0 rounded-full px-3 py-1 text-sm', selected ? 'bg-pink text-ink' : 'text-muted')}>
+            {selected ? tx('已選擇', 'Selected') : tx('按此選擇', 'Choose')}
+          </span>
+        </span>
+        <span className="mt-3 block text-sm leading-relaxed text-muted">
+          {lang === 'en' ? teacher.summaryEn : teacher.summary}
+        </span>
+      </button>
+      {teacher.slug === 'andy' ? (
+        <div className="mt-4">
+          <AndyPublicFacts />
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 function ServiceCard({
   title,
   price,
@@ -331,8 +383,8 @@ function ServiceCard({
         pressed ? 'border-pink bg-blush' : 'border-line bg-white',
       )}
     >
-      <span className="block text-sm text-muted">{title}</span>
-      <span className="mt-3 block text-3xl text-ink">{price}</span>
+      <span className="block text-3xl text-ink">{title}</span>
+      <span className="mt-3 block text-sm text-muted">{price}</span>
       <span className="mt-4 block text-sm leading-relaxed text-ink">{detail}</span>
       <span className="mt-2 block text-sm leading-relaxed text-muted">{meta}</span>
     </button>
