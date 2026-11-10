@@ -39,7 +39,7 @@ export function HostSchedulePage() {
       setError(result.error)
       return
     }
-    setSlots(result.board.slots)
+    setSlots(result.board.slots.filter((slot) => slot.kind === 'group'))
   }
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export function HostSchedulePage() {
     void bookingApi.listBoard().then((result) => {
       if (!active) return
       if (!result.ok) setError(result.error)
-      else setSlots(result.board.slots)
+      else setSlots(result.board.slots.filter((slot) => slot.kind === 'group'))
     })
     return () => {
       active = false

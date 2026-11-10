@@ -1,4 +1,5 @@
 import { bookingMessage } from './messages.ts'
+import { BOOKING_SESSION_CAPACITY } from './rules.ts'
 import {
   parseBookingName,
   parseCapacity,
@@ -9,7 +10,17 @@ import {
   parseRoomCode,
   parseStartsAt,
 } from './rules.ts'
-import type { BookingApi, BookingBoard, Fail, PublicSlot, PublicTeacher, SlotBooking } from './types.ts'
+import { parseSlotStart, rangesOverlap } from './time.ts'
+import type {
+  BookingApi,
+  BookingBoard,
+  Fail,
+  PublicSlot,
+  PublicTeacher,
+  SlotBooking,
+  TeacherAccount,
+  TeacherDirectoryEntry,
+} from './types.ts'
 
 const KEY = 'belief-booking-v1'
 const TWELVE_HOURS = 12 * 60 * 60 * 1000
@@ -54,9 +65,10 @@ interface MockState {
   bookings: StoredBooking[]
   credentials: StoredCred[]
   claims: StoredClaim[]
+  actorId: string | null
 }
 
-const teachers: Array<PublicTeacher & { bookable: boolean }> = [
+const teachers: Array<PublicTeacher & { role: 'teacher' | 'operator' }> = [
   {
     id: 'teacher-andy',
     slug: 'andy',
@@ -64,6 +76,7 @@ const teachers: Array<PublicTeacher & { bookable: boolean }> = [
     summary: '希塔療癒。現時可預約。',
     summaryEn: 'Theta Healing. Available now.',
     bookable: true,
+    role: 'teacher',
   },
   {
     id: 'teacher-vanessa',
@@ -72,26 +85,73 @@ const teachers: Array<PublicTeacher & { bookable: boolean }> = [
     summary: 'Quantum healing。認證量子療癒師。',
     summaryEn: 'Quantum healing. Certified quantum practitioner.',
     bookable: false,
+    role: 'operator',
+  },
+]
+
+const SEEDED_GROUP_SLOTS: StoredSlot[] = [
+  {
+    id: '4c2cfa7e-3453-4423-b140-2cf8d5fe0b5a',
+    kind: 'group',
+    startsAt: '2026-11-11T11:00:00.000Z',
+    capacity: 20,
+    hostLabel: 'Andy',
+    teacherId: 'teacher-andy',
+    roomCode: null,
+    status: 'open',
+  },
+  {
+    id: 'dd7abde4-fb40-4632-a1de-69ef106162ae',
+    kind: 'group',
+    startsAt: '2026-11-12T11:00:00.000Z',
+    capacity: 20,
+    hostLabel: 'Andy',
+    teacherId: 'teacher-andy',
+    roomCode: null,
+    status: 'open',
+  },
+  {
+    id: 'de0a62e7-b5bd-4fb4-b216-9eb9a331f42b',
+    kind: 'group',
+    startsAt: '2026-11-14T07:00:00.000Z',
+    capacity: 20,
+    hostLabel: 'Andy',
+    teacherId: 'teacher-andy',
+    roomCode: null,
+    status: 'open',
   },
 ]
 
 function emptyState(): MockState {
-  return { slots: [], bookings: [], credentials: [], claims: [] }
+  return { slots: [], bookings: [], credentials: [], claims: [], actorId: null }
+}
+
+function withSeeds(state: MockState) {
+  let changed = false
+  for (const seed of SEEDED_GROUP_SLOTS) {
+    if (!state.slots.some((slot) => slot.id === seed.id)) {
+      state.slots.push({ ...seed })
+      changed = true
+    }
+  }
+  if (changed) save(state)
+  return state
 }
 
 function load(): MockState {
   try {
     const raw = sessionStorage.getItem(KEY)
-    if (!raw) return emptyState()
+    if (!raw) return withSeeds(emptyState())
     const parsed = JSON.parse(raw) as Partial<MockState>
-    return {
+    return withSeeds({
       slots: Array.isArray(parsed.slots) ? parsed.slots : [],
       bookings: Array.isArray(parsed.bookings) ? parsed.bookings : [],
       credentials: Array.isArray(parsed.credentials) ? parsed.credentials : [],
       claims: Array.isArray(parsed.claims) ? parsed.claims : [],
-    }
+      actorId: typeof parsed.actorId === 'string' ? parsed.actorId : null,
+    })
   } catch {
-    return emptyState()
+    return withSeeds(emptyState())
   }
 }
 
@@ -120,18 +180,26 @@ function confirmedFor(state: MockState, slotId: string) {
 function toPublic(state: MockState, slot: StoredSlot): PublicSlot {
   return {
     id: slot.id,
-    kind: 'group',
+    kind: slot.kind,
     startsAt: slot.startsAt,
     capacity: slot.capacity,
     bookedCount: confirmedFor(state, slot.id).length,
     hostLabel: slot.hostLabel,
+    teacherId: slot.teacherId,
     roomCode: slot.roomCode,
     status: slot.status === 'cancelled' ? 'open' : slot.status,
   }
 }
 
 function visible(slot: StoredSlot, now: number) {
-  return slot.kind === 'group' && slot.status !== 'cancelled' && new Date(slot.startsAt).getTime() > now - TWELVE_HOURS
+  if (slot.status === 'cancelled') return false
+  if (slot.kind !== 'group' && slot.kind !== 'one_on_one') return false
+  if (slot.teacherId) {
+    const teacher = teachers.find((item) => item.id === slot.teacherId)
+    if (teacher && !teacher.bookable) return false
+  }
+  if (slot.hostLabel && teachers.some((teacher) => !teacher.bookable && teacher.name === slot.hostLabel)) return false
+  return new Date(slot.startsAt).getTime() > now - TWELVE_HOURS
 }
 
 async function acceptProof(state: MockState, pin: string, roomCode: string | null) {
@@ -151,10 +219,6 @@ async function acceptProof(state: MockState, pin: string, roomCode: string | nul
 function canManage(scope: 'session' | 'preview', slot: StoredSlot, roomCode: string | null) {
   if (scope === 'preview') return true
   return Boolean(slot.roomCode && roomCode && slot.roomCode === roomCode)
-}
-
-function sameMinute(left: string, right: string) {
-  return Math.floor(new Date(left).getTime() / 60000) === Math.floor(new Date(right).getTime() / 60000)
 }
 
 function boardOf(state: MockState): BookingBoard {
@@ -204,7 +268,7 @@ export const mockBooking: BookingApi = {
       startsAt: when.iso,
       capacity: capacity.capacity,
       hostLabel: label.label,
-      teacherId: null,
+      teacherId: teachers.find((teacher) => teacher.bookable && teacher.name === label.label)?.id ?? null,
       roomCode: code.code,
       status: 'open',
     }
@@ -343,6 +407,12 @@ export const mockBooking: BookingApi = {
     const state = load()
     const slot = state.slots.find((item) => item.id === input.slotId && item.kind === 'group')
     if (!slot) return fail('slot_not_found')
+    if (slot.teacherId && teachers.some((teacher) => teacher.id === slot.teacherId && !teacher.bookable)) {
+      return fail('teacher_unavailable')
+    }
+    if (slot.hostLabel && teachers.some((teacher) => !teacher.bookable && teacher.name === slot.hostLabel)) {
+      return fail('teacher_unavailable')
+    }
     if (slot.status === 'full') return fail('slot_full')
     if (slot.status !== 'open' || new Date(slot.startsAt).getTime() < Date.now() - TWELVE_HOURS) return fail('slot_closed')
     const rows = confirmedFor(state, slot.id)
@@ -371,42 +441,160 @@ export const mockBooking: BookingApi = {
   async bookOneOnOne(input) {
     const name = parseBookingName(input.name)
     const contact = parseContact(input.contact ?? '')
-    const when = parseStartsAt(input.startsAt)
     if (!name.ok) return fail(name.error)
     if (!contact.ok) return fail(contact.error)
-    if (!when.ok) return fail(when.error)
-    const teacher = teachers.find((item) => item.id === input.teacherId)
-    if (!teacher || !teacher.bookable) return fail('teacher_unavailable')
     const state = load()
-    const taken = state.slots.some(
-      (slot) =>
-        slot.teacherId === teacher.id &&
-        slot.kind === 'one_on_one' &&
-        slot.status !== 'cancelled' &&
-        sameMinute(slot.startsAt, when.iso),
-    )
-    if (taken) return fail('slot_taken')
-    const slotId = crypto.randomUUID()
-    state.slots.push({
-      id: slotId,
-      kind: 'one_on_one',
-      startsAt: when.iso,
-      capacity: 1,
-      hostLabel: teacher.name,
-      teacherId: teacher.id,
-      roomCode: null,
-      status: 'full',
-    })
+    const slot = state.slots.find((item) => item.id === input.slotId && item.kind === 'one_on_one')
+    if (!slot || !slot.teacherId) return fail('slot_not_found')
+    const teacher = teachers.find((item) => item.id === slot.teacherId)
+    if (!teacher?.bookable) return fail('teacher_unavailable')
+    if (slot.status === 'full') return fail('slot_full')
+    if (slot.status !== 'open' || new Date(slot.startsAt).getTime() < Date.now() - TWELVE_HOURS) return fail('slot_closed')
+    const rows = confirmedFor(state, slot.id)
+    if (rows.some((booking) => booking.name.toLowerCase() === name.name.toLowerCase())) {
+      return { ok: true, already: true }
+    }
+    if (rows.length >= slot.capacity) {
+      slot.status = 'full'
+      save(state)
+      return fail('slot_full')
+    }
     state.bookings.push({
       id: crypto.randomUUID(),
-      slotId,
+      slotId: slot.id,
       name: name.name,
       contact: contact.contact,
-      teacherId: teacher.id,
+      teacherId: slot.teacherId,
       status: 'confirmed',
       createdAt: new Date().toISOString(),
     })
+    if (rows.length + 1 >= slot.capacity) slot.status = 'full'
+    save(state)
+    return { ok: true, already: false }
+  },
+
+  async teacherMe() {
+    const state = load()
+    const teacher = teachers.find((item) => item.id === state.actorId)
+    if (!teacher) return fail('not_authenticated')
+    return { ok: true, teacher: accountOf(teacher), directory: teacher.role === 'operator' ? directoryOf() : [] }
+  },
+
+  async teacherListSlots(input) {
+    const state = load()
+    const actor = teachers.find((item) => item.id === state.actorId)
+    if (!actor) return fail('not_authenticated')
+    if (input.kind !== 'group' && input.kind !== 'one_on_one') return fail('kind')
+    const from = new Date(input.from).getTime()
+    const to = new Date(input.to).getTime()
+    if (!Number.isFinite(from) || !Number.isFinite(to) || to <= from || to - from > 45 * 24 * 60 * 60 * 1000) {
+      return fail('starts_at')
+    }
+    const slots = state.slots
+      .filter((slot) => {
+        if (slot.kind !== input.kind || slot.status === 'cancelled') return false
+        const starts = new Date(slot.startsAt).getTime()
+        if (starts < from || starts >= to) return false
+        if (actor.role === 'operator') return true
+        return slot.teacherId === actor.id || (slot.teacherId == null && slot.hostLabel === actor.name)
+      })
+      .sort((left, right) => left.startsAt.localeCompare(right.startsAt))
+      .map((slot) => toPublic(state, slot))
+    return { ok: true, slots }
+  },
+
+  async teacherOpenSlot(input) {
+    const when = parseSlotStart(input.startsAt)
+    if (!when.ok) return fail(when.error)
+    const state = load()
+    const actor = teachers.find((item) => item.id === state.actorId)
+    if (!actor) return fail('not_authenticated')
+    if (!actor.bookable || actor.role !== 'teacher') return fail('forbidden')
+    if (input.kind !== 'group' && input.kind !== 'one_on_one') return fail('kind')
+    const start = new Date(when.iso).getTime()
+    const overlap = state.slots.some((slot) => {
+      if (slot.status === 'cancelled') return false
+      const owns = slot.teacherId === actor.id || (slot.teacherId == null && slot.hostLabel === actor.name)
+      if (!owns) return false
+      return rangesOverlap(start, new Date(slot.startsAt).getTime())
+    })
+    if (overlap) return fail('slot_overlap')
+    const slot: StoredSlot = {
+      id: crypto.randomUUID(),
+      kind: input.kind,
+      startsAt: when.iso,
+      capacity: input.kind === 'one_on_one' ? 1 : BOOKING_SESSION_CAPACITY,
+      hostLabel: actor.name,
+      teacherId: actor.id,
+      roomCode: null,
+      status: 'open',
+    }
+    state.slots.push(slot)
+    save(state)
+    return { ok: true, slot: toPublic(state, slot) }
+  },
+
+  async teacherCloseSlot(input) {
+    const state = load()
+    const actor = teachers.find((item) => item.id === state.actorId)
+    if (!actor) return fail('not_authenticated')
+    const slot = state.slots.find((item) => item.id === input.slotId && item.status !== 'cancelled')
+    if (!slot) return fail('slot_not_found')
+    const owns = slot.teacherId === actor.id || (slot.teacherId == null && slot.hostLabel === actor.name)
+    if (actor.role !== 'operator' && !owns) return fail('forbidden')
+    slot.status = 'cancelled'
     save(state)
     return { ok: true }
   },
+
+  async teacherListBookings(input) {
+    const state = load()
+    const actor = teachers.find((item) => item.id === state.actorId)
+    if (!actor) return fail('not_authenticated')
+    const slot = state.slots.find((item) => item.id === input.slotId)
+    if (!slot) return fail('slot_not_found')
+    const owns = slot.teacherId === actor.id || (slot.teacherId == null && slot.hostLabel === actor.name)
+    if (actor.role !== 'operator' && !owns) return fail('forbidden')
+    const bookings: SlotBooking[] = confirmedFor(state, slot.id).map((booking) => ({
+      name: booking.name,
+      contact: booking.contact,
+      createdAt: booking.createdAt,
+    }))
+    return { ok: true, bookings }
+  },
+
+  async teacherPreview(input) {
+    const teacher = teachers.find((item) => item.role === input.role && (input.role === 'operator' || item.bookable))
+    if (!teacher) return fail('teacher_unavailable')
+    const state = load()
+    state.actorId = teacher.id
+    save(state)
+    return { ok: true }
+  },
+
+  async teacherSignOut() {
+    const state = load()
+    state.actorId = null
+    save(state)
+    return { ok: true }
+  },
+}
+
+function accountOf(teacher: (typeof teachers)[number]): TeacherAccount {
+  return {
+    id: teacher.id,
+    slug: teacher.slug,
+    name: teacher.name,
+    role: teacher.role,
+    bookable: teacher.bookable,
+  }
+}
+
+function directoryOf(): TeacherDirectoryEntry[] {
+  return teachers.map((teacher) => ({
+    id: teacher.id,
+    slug: teacher.slug,
+    name: teacher.name,
+    bookable: teacher.bookable,
+  }))
 }

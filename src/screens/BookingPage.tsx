@@ -1,10 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { bookingApi } from '@/booking/api'
-import { defaultStartValue, formatWhen } from '@/booking/format'
+import { formatWhen } from '@/booking/format'
 import { bookingMessage } from '@/booking/messages'
-import { parseBookingName, parseContact, parseStartsAt } from '@/booking/rules'
-import type { PublicSlot, PublicTeacher } from '@/booking/types'
+import { filterPublicSlots } from '@/booking/publicSlots'
+import { parseBookingName, parseContact } from '@/booking/rules'
+import type { PublicSlot, PublicTeacher, SlotKind } from '@/booking/types'
 import { AndyPublicFacts } from '@/components/AndyPublicFacts'
 import { PublicNav } from '@/components/PublicNav'
 import { Frame } from '@/components/Frame'
@@ -32,7 +33,6 @@ export function BookingPage() {
   const [step, setStep] = useState<Step>(focusOne ? 2 : 1)
   const [teacherId, setTeacherId] = useState('')
   const [slotId, setSlotId] = useState('')
-  const [startsAt, setStartsAt] = useState(defaultStartValue)
   const [name, setName] = useState('')
   const [contact, setContact] = useState('')
   const [pending, setPending] = useState(false)
@@ -48,7 +48,8 @@ export function BookingPage() {
 
   useEffect(() => {
     let active = true
-    void bookingApi.listBoard().then((result) => {
+    async function load() {
+      const result = await bookingApi.listBoard()
       if (!active) return
       setLoading(false)
       if (!result.ok) setError(result.error)
@@ -56,9 +57,17 @@ export function BookingPage() {
         setTeachers(result.board.teachers)
         setSlots(result.board.slots)
       }
-    })
+    }
+    void load()
+    const timer = window.setInterval(() => void load(), 8000)
+    function onVisible() {
+      if (document.visibilityState === 'visible') void load()
+    }
+    document.addEventListener('visibilitychange', onVisible)
     return () => {
       active = false
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisible)
     }
   }, [])
 
@@ -66,14 +75,9 @@ export function BookingPage() {
   const pickedTeacher = offeredTeachers.find((item) => item.id === teacherId) ?? null
   const onlyTeacher = offeredTeachers.length === 1 ? offeredTeachers[0] : null
   const teacher = pickedTeacher ?? onlyTeacher
-  const closedNames = new Set(teachers.filter((item) => !item.bookable).map((item) => item.name))
+  const slotKind: SlotKind = kind === 'one' ? 'one_on_one' : 'group'
   const slot = slots.find((item) => item.id === slotId) ?? null
-  const openSlots = slots.filter(
-    (item) =>
-      item.status === 'open' &&
-      item.bookedCount < item.capacity &&
-      !(item.hostLabel && closedNames.has(item.hostLabel)),
-  )
+  const openSlots = teacher ? filterPublicSlots(slots, teachers, slotKind, teacher.id) : []
 
   function chooseKind(next: Kind) {
     setKind(next)
@@ -99,45 +103,24 @@ export function BookingPage() {
     if (!parsedContact.ok) return setError(bookingMessage(parsedContact.error))
     setPending(true)
     setError(null)
-    if (kind === 'group') {
-      if (!slot) {
-        setPending(false)
-        setError(tx('請選擇一個場次。', 'Choose a session.'))
-        return
-      }
-      const result = await bookingApi.joinSlot({ slotId: slot.id, name: parsedName.name, contact: parsedContact.contact })
+    if (!slot || slot.kind !== slotKind) {
       setPending(false)
-      if (!result.ok) return setError(result.error)
-      setDone({
-        kind,
-        teacherName: slot.hostLabel ?? teacher.name,
-        modality: teacher.summary,
-        modalityEn: teacher.summaryEn,
-        when: formatWhen(slot.startsAt, lang),
-        join: slot.roomCode,
-      })
+      setError(tx('請選擇一個已開放的時段。', 'Choose an open session.'))
       return
     }
-    const when = parseStartsAt(startsAt)
-    if (!when.ok) {
-      setPending(false)
-      return setError(bookingMessage(when.error))
-    }
-    const result = await bookingApi.bookOneOnOne({
-      teacherId: teacher.id,
-      startsAt: when.iso,
-      name: parsedName.name,
-      contact: parsedContact.contact,
-    })
+    const result =
+      kind === 'group'
+        ? await bookingApi.joinSlot({ slotId: slot.id, name: parsedName.name, contact: parsedContact.contact })
+        : await bookingApi.bookOneOnOne({ slotId: slot.id, name: parsedName.name, contact: parsedContact.contact })
     setPending(false)
     if (!result.ok) return setError(result.error)
     setDone({
       kind,
-      teacherName: teacher.name,
+      teacherName: slot.hostLabel ?? teacher.name,
       modality: teacher.summary,
       modalityEn: teacher.summaryEn,
-      when: formatWhen(when.iso, lang),
-      join: null,
+      when: formatWhen(slot.startsAt, lang),
+      join: kind === 'group' ? slot.roomCode : null,
     })
   }
 
@@ -187,7 +170,7 @@ export function BookingPage() {
                   <ServiceCard
                     title={tx('一對一', 'One-on-one')}
                     price={`HKD ${ONE_ON_ONE_HKD}`}
-                    detail={tx('約一小時。本頁只作登記，不在此收款。', 'About one hour. This page registers the time and does not take payment.')}
+                    detail={tx('約一小時。只可選導師已開放的時段。本頁只作登記，不在此收款。', 'About one hour. Choose an hour the teacher has opened. This page registers the time and does not take payment.')}
                     meta={tx('現時可選 Andy（希塔療癒）。', 'Andy (Theta Healing) can be chosen now.')}
                     pressed={kind === 'one'}
                     onClick={() => chooseKind('one')}
@@ -244,39 +227,33 @@ export function BookingPage() {
                   {tx(`與 ${teacher.name} 選擇時間`, `Choose a time with ${teacher.name}`)}
                 </h2>
                 <form className="mt-6 max-w-xl" noValidate onSubmit={(event) => void submit(event)}>
-                  {kind === 'group' ? (
-                    <fieldset>
-                      <legend className="text-sm text-ink">{tx('已開放的小組場次', 'Open group sessions')}</legend>
-                      {openSlots.length === 0 ? (
-                        <p className="mt-3 text-sm text-muted">{tx('尚無已開放的場次。', 'No sessions are open yet.')}</p>
-                      ) : (
-                        <div className="mt-4 grid gap-3">
-                          {openSlots.map((item) => (
-                            <label key={item.id} className={cn('rounded-[22px] border px-4 py-4', slotId === item.id ? 'border-pink bg-blush' : 'border-line bg-white')}>
-                              <span className="flex items-start gap-3">
-                                <input type="radio" name="slot" value={item.id} checked={slotId === item.id} onChange={() => setSlotId(item.id)} />
-                                <span>
-                                  <span className="block text-ink">{formatWhen(item.startsAt, lang)}</span>
-                                  <span className="mt-1 block text-sm text-muted">
-                                    {item.hostLabel ? `${item.hostLabel} · ` : ''}
-                                    {item.bookedCount >= item.capacity
-                                      ? tx('這一場已經額滿', 'This session is already full')
-                                      : tx(`已登記 ${item.bookedCount} 人`, `${item.bookedCount} registered`)}
-                                  </span>
+                  <fieldset>
+                    <legend className="text-sm text-ink">
+                      {kind === 'group' ? tx('已開放的小組場次', 'Open group sessions') : tx('已開放的一對一時段', 'Open one-on-one hours')}
+                    </legend>
+                    {openSlots.length === 0 ? (
+                      <p className="mt-3 text-sm text-muted">{tx('尚無已開放的時段。', 'No sessions are open yet.')}</p>
+                    ) : (
+                      <div className="mt-4 grid gap-3">
+                        {openSlots.map((item) => (
+                          <label key={item.id} className={cn('rounded-[22px] border px-4 py-4', slotId === item.id ? 'border-pink bg-blush' : 'border-line bg-white')}>
+                            <span className="flex items-start gap-3">
+                              <input type="radio" name="slot" value={item.id} checked={slotId === item.id} onChange={() => setSlotId(item.id)} />
+                              <span>
+                                <span className="block text-ink">{formatWhen(item.startsAt, lang)}</span>
+                                <span className="mt-1 block text-sm text-muted">
+                                  {item.hostLabel ? `${item.hostLabel} · ` : ''}
+                                  {kind === 'group'
+                                    ? tx(`已登記 ${item.bookedCount} 人`, `${item.bookedCount} registered`)
+                                    : tx(`一小時 · HKD ${ONE_ON_ONE_HKD}`, `One hour · HKD ${ONE_ON_ONE_HKD}`)}
                                 </span>
                               </span>
-                            </label>
-                          ))}
-                        </div>
-                      )}
-                    </fieldset>
-                  ) : (
-                    <label className="block" htmlFor="one-start">
-                      <span className="text-sm text-ink">{tx('希望的日期與時間', 'Preferred date and time')}</span>
-                      <Input id="one-start" className="mt-2" type="datetime-local" value={startsAt} onChange={(event) => setStartsAt(event.target.value)} required />
-                      <span className="mt-2 block text-sm text-muted">{tx(`約一小時 · HKD ${ONE_ON_ONE_HKD}`, `About one hour · HKD ${ONE_ON_ONE_HKD}`)}</span>
-                    </label>
-                  )}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </fieldset>
                   <label className="mt-6 block" htmlFor="book-name">
                     <span className="text-sm text-ink">{tx('你的名字', 'Your name')}</span>
                     <Input id="book-name" className="mt-2" value={name} onChange={(event) => setName(event.target.value)} maxLength={32} required />
@@ -287,7 +264,7 @@ export function BookingPage() {
                   </label>
                   <div className="mt-8 flex flex-wrap gap-3">
                     <Button variant="ghost" type="button" onClick={() => setStep(2)}>{tx('返回', 'Back')}</Button>
-                    <Button size="lg" type="submit" disabled={pending || (kind === 'group' && openSlots.length === 0)}>
+                    <Button size="lg" type="submit" disabled={pending || openSlots.length === 0 || !slot}>
                       {pending
                         ? tx('正在登記', 'Registering')
                         : kind === 'group'

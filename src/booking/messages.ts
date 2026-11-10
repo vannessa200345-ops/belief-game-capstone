@@ -20,6 +20,23 @@ const copy: Record<string, [string, string]> = {
   slot_closed: ['這個場次已不再接受登記。', 'This session is no longer open.'],
   slot_full: ['這一場已經額滿。', 'This session is already full.'],
   slot_taken: ['這位導師在該時間已有預約。', 'That teacher is already booked at that time.'],
+  slot_hour: [
+    '請選擇香港時間的整點，每場六十分鐘。',
+    'Choose an on-the-hour start in Hong Kong time. Each session is 60 minutes.',
+  ],
+  slot_overlap: ['這個小時已經有場次。', 'That hour already has a session.'],
+  kind: ['請選擇小組或一對一。', 'Choose group or one-on-one.'],
+  teacher_not_linked: [
+    '這個登入尚未連接到導師。請營運者完成連結後再重新整理。',
+    'This login is not linked to a teacher yet. Ask the operator to link it, then reload.',
+  ],
+  invalid_email: ['請輸入有效電郵。', 'Enter a valid email.'],
+  password_format: ['密碼至少八個字元。', 'Use at least 8 characters.'],
+  sign_in_failed: ['電郵或密碼不正確。', 'That email or password was not accepted.'],
+  recovery_sent: [
+    '如果這個電郵可以登入，你會收到重設密碼信。',
+    'If this email can sign in, a reset message is on its way.',
+  ],
   claim_invalid: ['領取碼不正確，或已經使用。', 'That claim code is not valid, or it has already been used.'],
   forbidden: ['你沒有權限處理這個場次。', 'You cannot manage this session.'],
   invalid_display_name: ['請留下名字，三十二個字以內。', 'Add a name, up to 32 characters.'],

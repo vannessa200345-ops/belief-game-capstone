@@ -44,7 +44,24 @@ Apply `supabase/migrations/20261108150000_host_pin_and_bookings.sql` in the Supa
 
 A renter sets a different password for their own session at `/host/setup`, using a one-time claim code from the schedule. Players still join `/r/ROOMCODE` with no password.
 
-`/book` lists group slots and one-on-one teachers. A booking session stores 200 registrations internally. The host does not set a room limit, and creating a room still sends `p_max_players` as null. Apply `20261108200000_booking_session_capacity.sql` so the database accepts that session size.
+`/book` lists group slots and one-on-one hours that a bookable teacher has opened. Both are 60-minute sessions in Asia/Hong_Kong, on separate calendars. A student registers with a name and an optional contact. There is no student login and no payment on this page. A booking session can store 200 registrations internally. That number is not shown on the public page. The host does not set a room limit, and creating a room still sends `p_max_players` as null. Apply `20261108200000_booking_session_capacity.sql` so the database accepts that session size.
+
+Teachers open and close hours at `/teacher`. That login is Supabase Auth, not the host PIN and not a room PIN. Apply `20261110120000_teacher_calendar.sql` in the SQL editor, then reload the API schema cache. The migration does not delete or rewrite the existing open group rows. It leaves `teachers.auth_user_id` empty.
+
+To attach a login after Vanessa supplies an email:
+
+1. In Authentication → URL Configuration, allow `https://belief-game-capstone.vercel.app/teacher` (and the local `/teacher` URL used in development).
+2. In Authentication → Users, invite or add that person. Do not invent the address or the password in source control.
+3. In the SQL editor, link the account. Either form works:
+
+```sql
+select public.link_teacher_login('andy', 'the-email-vanessa-provides');
+select public.link_teacher_login('vanessa', 'the-operator-email');
+-- or, when you already have the auth user id:
+select public.link_teacher_login('andy', null, 'auth-user-uuid');
+```
+
+`link_teacher_login` is not granted to the public API. Andy's row stays `calendar_role = teacher`. Vanessa's row stays `calendar_role = operator` and `bookable = false`, so she can view and emergency-close from `/teacher` and is not offered on `/book`. A teacher opens hours; an operator does not open hours for them. Closing a session sets `status = cancelled`, and the public page drops it on the next read.
 
 After the host password is accepted, the console and `/host/analytics` stay available during play. Live scoring shows the match rate, people present, and how many cards already have a checked answer. Totals still come only from checked choices in this session. The host and demo learners are not scored. A projector control only enlarges that panel.
 
