@@ -7,6 +7,7 @@ import { CardWave } from '@/components/CardWave'
 import { LiveTally } from '@/components/LiveTally'
 import { TimeGlance } from '@/components/TimeGlance'
 import { HostMessage } from '@/components/HostMessage'
+import { HostMusic } from '@/components/HostMusic'
 import { Leaderboard } from '@/components/Leaderboard'
 import { NextStep } from '@/components/NextStep'
 import { SelfPaceNotice } from '@/components/SelfPaceNotice'
@@ -92,6 +93,9 @@ export function ControlPage() {
               ? tx(` · ${board.total} 句答題`, ` · ${board.total} cards to answer`)
               : null}
           </p>
+        </div>
+        <div className="mt-4">
+          <HostMusic />
         </div>
         <div className="mt-4">
           <NextStep label={tx('下一步：', 'Next: ')}>

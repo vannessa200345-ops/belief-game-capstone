@@ -14,7 +14,12 @@ import type {
 import { liveBackend } from '../lib/env.ts'
 import { ensureAnonymousSession, getSupabase } from '../lib/supabase.ts'
 import type { RealtimeChannel } from '@supabase/supabase-js'
+import { findTrack } from '../domain/musicTracks.ts'
+import { nextMusic, type MusicAction } from '../domain/playback.ts'
+import type { RoomMusic } from '../domain/types.ts'
+import { resetClock } from '../audio/clock.ts'
 import { clearPace } from '../self/pace.ts'
+import { bindRoomSync } from './roomSync.ts'
 import { tx } from '../i18n/text.ts'
 import { explain } from './errors.ts'
 import { mapLobby } from './mapLobby.ts'
@@ -44,6 +49,7 @@ const emptyState: PersistedState = {
   notes: [],
   remoteAnswered: {},
   serverAnswerCount: 0,
+  music: null,
 }
 
 let memory: PersistedState = emptyState
@@ -62,6 +68,76 @@ let roomNotes: RoomNote[] = []
 let selfPaceRpc: 'unknown' | 'live' | 'missing' = 'unknown'
 let remoteAnswered: Record<string, number> = {}
 let playingSince: number | null = null
+let syncHandle: ReturnType<typeof bindRoomSync> | null = null
+let music: RoomMusic | null = null
+
+function viewerIsHost() {
+  return Boolean(memory.players.find((player) => player.id === memory.youId)?.host)
+}
+
+function hostPlayerId() {
+  return memory.players.find((player) => player.host)?.id ?? null
+}
+
+function musicStorageKey(id: string) {
+  return `belief-music:${id}`
+}
+
+function readSavedMusic(id: string): RoomMusic | null {
+  try {
+    const raw = sessionStorage.getItem(musicStorageKey(id))
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as RoomMusic
+    if (!parsed || typeof parsed.trackId !== 'string' || typeof parsed.playing !== 'boolean') return null
+    if (typeof parsed.positionMs !== 'number' || typeof parsed.anchorAt !== 'number') return null
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+function writeSavedMusic(id: string, value: RoomMusic | null) {
+  try {
+    if (!value) sessionStorage.removeItem(musicStorageKey(id))
+    else sessionStorage.setItem(musicStorageKey(id), JSON.stringify(value))
+  } catch {
+    /* 主持重新整理後仍可從記憶繼續。 */
+  }
+}
+
+function resetSync() {
+  music = null
+  resetClock()
+}
+
+function publishRoomSync() {
+  if (!viewerIsHost()) return
+  syncHandle?.publish(music)
+}
+
+function bindSync(id: string | null) {
+  syncHandle?.close()
+  syncHandle = null
+  if (!id) return
+  syncHandle = bindRoomSync(id, {
+    isHost: viewerIsHost,
+    hostId: hostPlayerId,
+    onMusic: (next) => {
+      if (viewerIsHost()) return
+      if (
+        music?.trackId === next?.trackId &&
+        music?.playing === next?.playing &&
+        music?.positionMs === next?.positionMs &&
+        music?.anchorAt === next?.anchorAt
+      ) {
+        return
+      }
+      music = next
+      memory = { ...memory, music }
+      publish()
+    },
+  })
+}
 
 function isMissingRpc(error: unknown): boolean {
   const text = JSON.stringify(error)
@@ -175,7 +251,11 @@ function rememberRoom(id: string | null) {
   roomId = id
   if (id) sessionStorage.setItem(ROOM_KEY, id)
   else sessionStorage.removeItem(ROOM_KEY)
-  if (changed) roomNotes = id ? readNotes(id) : []
+  if (changed) {
+    resetSync()
+    roomNotes = id ? readNotes(id) : []
+    bindSync(id)
+  }
   bindRoomChannel(id)
   if (changed) bindNotes(id)
 }
@@ -281,11 +361,20 @@ async function refreshOnce() {
       }
     }
     memory.remoteAnswered = remoteAnswered
+    if (viewerIsHost()) {
+      if (!music) {
+        const saved = readSavedMusic(lobby.room_id)
+        if (saved) music = saved
+      }
+      writeSavedMusic(lobby.room_id, music)
+    }
+    memory.music = music
     if (memory.room.deck !== deckPref && lobby.rounds.length + (lobby.open_round ? 1 : 0) > 0) {
       deckPref = memory.room.deck
     }
     connection = 'live'
     publish()
+    publishRoomSync()
   } catch (error) {
     const text = `${error instanceof Error ? error.message : ''} ${typeof error === 'object' && error && 'hint' in error ? String((error as { hint?: string }).hint) : ''}`
     if (text.includes('room_not_found') || text.includes('not_member') || text.includes('not_in_room')) {
@@ -622,6 +711,21 @@ export async function pauseRoom(): Promise<ActionResult> {
   })
 }
 
+export async function setRoomMusic(input: { trackId: string; action: MusicAction }): Promise<ActionResult> {
+  if (!findTrack(input.trackId)) return { ok: false, error: tx('找不到這首曲目。', 'That track was not found.') }
+  if (hostPlayerId() && !viewerIsHost()) {
+    return { ok: false, error: tx('只有主持可以控制背景音樂。', 'Only the host can control the music.') }
+  }
+  const next = nextMusic(music, input.action, input.trackId, Date.now())
+  if (next === music) return { ok: true }
+  music = next
+  if (roomId) writeSavedMusic(roomId, music)
+  memory = { ...memory, music }
+  publish()
+  publishRoomSync()
+  return { ok: true }
+}
+
 /** 主持叫名只記在這一頁。dequeue_speak 只可以放下自己的手。 */
 export async function advanceSpeaker(): Promise<ActionResult> {
   if (memory.queue.length === 0) return { ok: false, error: '現在沒有人在排隊。' }
@@ -644,6 +748,7 @@ function boot() {
       if (roomId) {
         bindRoomChannel(roomId)
         bindNotes(roomId)
+        bindSync(roomId)
       }
     } catch {
       connection = 'reconnecting'
@@ -654,6 +759,9 @@ function boot() {
   window.setInterval(() => {
     if (roomId && document.visibilityState !== 'hidden') void scheduleRefresh()
   }, 4000)
+  window.setInterval(() => {
+    if (roomId && document.visibilityState !== 'hidden') publishRoomSync()
+  }, 2000)
   window.addEventListener('online', () => {
     void scheduleRefresh()
   })

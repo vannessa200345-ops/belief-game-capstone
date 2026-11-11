@@ -123,6 +123,16 @@ export interface GameState {
   /** 伺服器答題進度。沒有 RPC 時是空的。 */
   remoteAnswered: Record<string, number>
   serverAnswerCount: number
+  /** 全房同步的背景音樂。anchorAt 用主持裝置的時鐘。 */
+  music: RoomMusic | null
+}
+
+/** 全房同一條播放時間線。playing 時，anchorAt 之後位置才向前走。 */
+export interface RoomMusic {
+  trackId: string
+  playing: boolean
+  positionMs: number
+  anchorAt: number
 }
 
 export type PersistedState = Omit<GameState, 'connection' | 'selfPaceLink'>

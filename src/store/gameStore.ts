@@ -1,4 +1,6 @@
 import { cardAt, cardsFor, deckHasAnswerKey, findCard } from '../domain/cards.ts'
+import { findTrack } from '../domain/musicTracks.ts'
+import { nextMusic, type MusicAction } from '../domain/playback.ts'
 import { clearPace } from '../self/pace.ts'
 import {
   DEMO_NAMES,
@@ -91,7 +93,15 @@ function createSeed(code: string, deck: DeckId): PersistedState {
     notes: [],
     remoteAnswered: {},
     serverAnswerCount: 0,
+    music: null,
   }
+}
+
+function readMusic(value: PersistedState['music'] | undefined): PersistedState['music'] {
+  if (!value || typeof value !== 'object') return null
+  if (typeof value.trackId !== 'string' || typeof value.playing !== 'boolean') return null
+  if (typeof value.positionMs !== 'number' || typeof value.anchorAt !== 'number') return null
+  return value
 }
 
 function hydrate(state: PersistedState): PersistedState {
@@ -101,6 +111,7 @@ function hydrate(state: PersistedState): PersistedState {
     notes: Array.isArray(state.notes) ? state.notes : [],
     remoteAnswered: state.remoteAnswered ?? {},
     serverAnswerCount: state.serverAnswerCount ?? 0,
+    music: readMusic(state.music),
     players: state.players.map((player) => ({
       ...player,
       email: typeof player.email === 'string' && player.email.length > 0 ? player.email : null,
@@ -661,6 +672,22 @@ export async function requestSpeak() {
     return true
   })
   return { ok: true as const }
+}
+
+export async function setRoomMusic(input: { trackId: string; action: MusicAction }): Promise<ActionResult> {
+  if (!findTrack(input.trackId)) return { ok: false, error: tx('找不到這首曲目。', 'That track was not found.') }
+  const markedHost = memory.players.some((player) => player.host)
+  const you = memory.players.find((player) => player.id === memory.youId)
+  if (markedHost && !you?.host) {
+    return { ok: false, error: tx('只有主持可以控制背景音樂。', 'Only the host can control the music.') }
+  }
+  await commit((draft) => {
+    const next = nextMusic(draft.music ?? null, input.action, input.trackId, Date.now())
+    if (next === (draft.music ?? null)) return false
+    draft.music = next
+    return true
+  })
+  return { ok: true }
 }
 
 export async function advanceSpeaker() {

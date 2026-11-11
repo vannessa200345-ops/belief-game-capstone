@@ -3,6 +3,7 @@ import { useLang } from '@/i18n/lang'
 import { ConnectionGate } from '@/components/Connection'
 import { Frame } from '@/components/Frame'
 import { PlayerSync } from '@/components/PlayerSync'
+import { RoomAudio } from '@/components/RoomAudio'
 import { HostAccessProvider } from '@/host/access'
 import { AnalyticsPage } from '@/screens/AnalyticsPage'
 import { AboutPage } from '@/screens/AboutPage'
@@ -56,6 +57,7 @@ export default function App() {
         {tx('跳到內容', 'Skip to content')}
       </a>
       <PlayerSync />
+      <RoomAudio />
       <ConnectionGate>
         <HostAccessProvider>
           <Routes>
