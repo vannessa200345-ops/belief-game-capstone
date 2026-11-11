@@ -152,7 +152,7 @@ function writeDisk() {
 }
 
 function withConnection(state: PersistedState): GameState {
-  return { ...state, connection, selfPaceLink: 'missing' }
+  return { ...state, connection, selfPaceLink: 'missing', pendingRoom: false }
 }
 
 function publish() {

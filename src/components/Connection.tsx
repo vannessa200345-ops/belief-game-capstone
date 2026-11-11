@@ -1,5 +1,9 @@
 import type { ReactNode } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useGame } from '@/api/useGame'
+import { youPlayer } from '@/domain/selectors'
+import { phasePath } from '@/live/restoreNav'
+import { usePace } from '@/self/pace'
 import { LanguageToggle } from './Frame'
 import { useLang } from '@/i18n/lang'
 import { BrandMark } from './BrandMark'
@@ -47,10 +51,20 @@ export function ReconnectBanner() {
 
 export function ConnectionGate({ children }: { children: ReactNode }) {
   const state = useGame()
+  const location = useLocation()
+  const pace = usePace(state.room.code)
   const params = new URLSearchParams(window.location.search)
   if (params.get('loading') === '1') return <LoadingScreen />
+  const you = youPlayer(state)
+  const invite = location.pathname.startsWith('/r/')
+  const sameRoomInvite = Boolean(
+    invite && state.room.code && location.pathname.toUpperCase() === `/R/${state.room.code.toUpperCase()}`,
+  )
+  const onPlayerPage = location.pathname === '/' || location.pathname.startsWith('/play') || sameRoomInvite
+  const target = you && onPlayerPage ? phasePath(state.room.phase, pace.done) : null
+  const restoring = state.connection === 'connecting' || (!you && state.pendingRoom)
+  if (restoring || (target != null && location.pathname !== target)) return <LoadingScreen />
   const pinned = params.get('reconnect') === '1'
-  if (state.connection === 'connecting') return <LoadingScreen />
   return (
     <>
       {pinned || state.connection === 'reconnecting' ? <ReconnectBanner /> : null}

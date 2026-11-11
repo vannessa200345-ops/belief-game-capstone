@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
 import type { HostScope } from '@/booking/types'
+import { loadHostDeskBrowser, loadSurfaceBrowser, saveHostDeskBrowser, saveSurfaceBrowser } from '@/host/deskStore'
 
 export interface HostSession {
   scope: HostScope
@@ -16,12 +17,27 @@ interface HostAccessValue {
 const HostAccessContext = createContext<HostAccessValue | null>(null)
 
 export function HostAccessProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<HostSession | null>(null)
+  const [session, setSession] = useState<HostSession | null>(() => loadHostDeskBrowser())
   const value = useMemo<HostAccessValue>(
     () => ({
       session,
-      unlock: (next) => setSession(next),
-      lock: () => setSession(null),
+      unlock: (next) => {
+        try {
+          saveHostDeskBrowser(next)
+        } catch {
+          /* 這一頁仍然解鎖。寫不入時，重新整理後要再輸入密碼。 */
+        }
+        setSession(next)
+      },
+      lock: () => {
+        try {
+          saveHostDeskBrowser(null)
+          if (loadSurfaceBrowser()?.startsWith('/host')) saveSurfaceBrowser(null)
+        } catch {
+          /* 記憶體先鎖上。 */
+        }
+        setSession(null)
+      },
     }),
     [session],
   )

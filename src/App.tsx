@@ -56,10 +56,10 @@ export default function App() {
       >
         {tx('跳到內容', 'Skip to content')}
       </a>
-      <PlayerSync />
-      <RoomAudio />
-      <ConnectionGate>
-        <HostAccessProvider>
+      <HostAccessProvider>
+        <PlayerSync />
+        <RoomAudio />
+        <ConnectionGate>
           <Routes>
             <Route path="/" element={<JoinPage />} />
             <Route path="/r/:code" element={<JoinPage />} />
@@ -80,8 +80,8 @@ export default function App() {
             </Route>
             <Route path="*" element={<MissingPage />} />
           </Routes>
-        </HostAccessProvider>
-      </ConnectionGate>
+        </ConnectionGate>
+      </HostAccessProvider>
     </>
   )
 }
