@@ -6,6 +6,14 @@ import { Panel } from '@/components/Panel'
 import { Button } from '@/components/ui/button'
 import { useLang } from '@/i18n/lang'
 
+function classroomEdit(edit: string): [string, string] {
+  const trimmed = /2\s*:\s*30|2 minutes 30/i.test(edit)
+  const zh = trimmed
+    ? '課堂版本：單聲道、64 kbps，截取首 2 分 30 秒，並加上短淡出。'
+    : '課堂版本：單聲道、64 kbps，結尾短淡出。'
+  return [zh, edit]
+}
+
 export function HostMusic() {
   const state = useGame()
   const { tx } = useLang()
@@ -76,15 +84,15 @@ export function HostMusic() {
         </Button>
       </div>
       {track ? (
-        <p className="mt-3 text-sm leading-relaxed text-muted">
-          {tx(
-            `${track.title}，${track.artist}。授權：${track.license}。`,
-            `${track.title}, ${track.artist}. License: ${track.license}.`,
-          )}{' '}
-          <a className="underline decoration-line underline-offset-4" href={track.licenseUrl} target="_blank" rel="noreferrer">
-            {track.license}
-          </a>
-        </p>
+        <>
+          <p className="mt-3 text-sm leading-relaxed text-muted">
+            {tx(`${track.title}，${track.artist}。授權：`, `${track.title}, ${track.artist}. License: `)}
+            <a className="underline decoration-line underline-offset-4" href={track.licenseUrl} target="_blank" rel="noreferrer">
+              {track.license}
+            </a>
+          </p>
+          <p className="mt-1 text-sm leading-relaxed text-muted">{tx(...classroomEdit(track.edit))}</p>
+        </>
       ) : null}
       {error ? (
         <p className="mt-2 text-sm text-ink" role="alert">
