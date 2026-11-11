@@ -118,6 +118,8 @@ export interface GameState {
   /** 這一場嘅文字訊息。唔係電郵，亦唔使開咪。 */
   notes: RoomNote[]
   connection: Connection
+  /** 已記住房間，但這一頁尚未確認你仍在場。這段時間不要送回加入頁。 */
+  pendingRoom: boolean
   /** 這一頁探測到的答題 RPC。不寫入房間，刷新後再探。 */
   selfPaceLink: SelfPaceLink
   /** 伺服器答題進度。沒有 RPC 時是空的。 */
@@ -135,7 +137,7 @@ export interface RoomMusic {
   anchorAt: number
 }
 
-export type PersistedState = Omit<GameState, 'connection' | 'selfPaceLink'>
+export type PersistedState = Omit<GameState, 'connection' | 'selfPaceLink' | 'pendingRoom'>
 
 export type AttentionKind = 'timeout' | 'stuck' | 'offline' | 'slow'
 

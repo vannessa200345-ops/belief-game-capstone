@@ -85,8 +85,8 @@ export function HostSetupPage() {
             <p className="text-base text-ink">{tx('本場密碼已設定。', 'This session’s password is set.')}</p>
             <p className="mt-2 text-sm leading-relaxed text-muted">
               {tx(
-                `房間碼 ${ready.roomCode}。重新整理頁面後，需要再輸入本場密碼。`,
-                `Room code ${ready.roomCode}. After a refresh, enter this session’s password again.`,
+                `房間碼 ${ready.roomCode}。鎖定主持台之前，這部裝置重新整理後仍會回到主持台。`,
+                `Room code ${ready.roomCode}. Until the desk is locked, this device returns to the host desk after a refresh.`,
               )}
             </p>
             <Button className="mt-4" onClick={enterDesk}>

@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react'
+import { browserLocal, browserSession, readDurable, removeDurable, writeDurable } from '../lib/durableKv.ts'
 
-const PACE_KEY = 'belief-self-pace'
+export const PACE_KEY = 'belief-self-pace'
 
 export interface PaceAnswer {
   cardId: string
@@ -35,7 +36,7 @@ function emit() {
 function persist(next: PaceState) {
   memory = next
   try {
-    sessionStorage.setItem(PACE_KEY, JSON.stringify(next))
+    writeDurable(browserLocal(), browserSession(), PACE_KEY, JSON.stringify(next))
   } catch {
     /* 這一頁仍可答完。 */
   }
@@ -46,7 +47,7 @@ export function readPace(roomCode: string): PaceState {
   if (!roomCode) return EMPTY_SNAPSHOT
   if (memory?.roomCode === roomCode) return memory
   try {
-    const raw = sessionStorage.getItem(PACE_KEY)
+    const raw = readDurable(browserLocal(), browserSession(), PACE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw) as PaceState
       if (
@@ -93,7 +94,7 @@ export function usePace(roomCode: string) {
 export function clearPace() {
   memory = null
   try {
-    sessionStorage.removeItem(PACE_KEY)
+    removeDurable(browserLocal(), browserSession(), PACE_KEY)
   } catch {
     /* 離開房間仍可繼續。 */
   }

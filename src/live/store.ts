@@ -12,6 +12,7 @@ import type {
   RoomNote,
 } from '../domain/types.ts'
 import { liveBackend } from '../lib/env.ts'
+import { browserLocal, browserSession, readDurable, removeDurable, writeDurable } from '../lib/durableKv.ts'
 import { ensureAnonymousSession, getSupabase } from '../lib/supabase.ts'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { findTrack } from '../domain/musicTracks.ts'
@@ -23,11 +24,32 @@ import { bindRoomSync } from './roomSync.ts'
 import { tx } from '../i18n/text.ts'
 import { explain } from './errors.ts'
 import { mapLobby } from './mapLobby.ts'
+import { lobbyErrorText, pathIsHostDesk, seatAfterFault, shouldForgetEndedRoom } from './membership.ts'
 import type { CardEventRow, LobbySnapshot, SpeakDequeue } from './types.ts'
 
 const ROOM_KEY = 'belief-live-room'
 const DECK_KEY = 'belief-live-deck'
 const BOOT = '__beliefLiveBooted'
+
+function readKey(key: string): string | null {
+  try {
+    return readDurable(browserLocal(), browserSession(), key)
+  } catch {
+    return null
+  }
+}
+
+function writeKey(key: string, value: string) {
+  try {
+    writeDurable(browserLocal(), browserSession(), key, value)
+  } catch {
+    /* 私人模式寫不入時，這一頁仍可繼續。 */
+  }
+}
+
+function removeKey(key: string) {
+  removeDurable(browserLocal(), browserSession(), key)
+}
 
 const emptyState: PersistedState = {
   room: {
@@ -54,7 +76,7 @@ const emptyState: PersistedState = {
 
 let memory: PersistedState = emptyState
 let connection: Connection = 'connecting'
-let snapshot: GameState = { ...emptyState, connection, selfPaceLink: 'unknown' }
+let snapshot: GameState = { ...emptyState, connection, selfPaceLink: 'unknown', pendingRoom: false }
 let roomId: string | null = null
 let called: GameState['called'] = null
 let events: CardEventRow[] = []
@@ -70,6 +92,9 @@ let remoteAnswered: Record<string, number> = {}
 let playingSince: number | null = null
 let syncHandle: ReturnType<typeof bindRoomSync> | null = null
 let music: RoomMusic | null = null
+let membershipMisses = 0
+let sawLiveLobby = false
+let retryTimer: number | null = null
 
 function viewerIsHost() {
   return Boolean(memory.players.find((player) => player.id === memory.youId)?.host)
@@ -85,7 +110,7 @@ function musicStorageKey(id: string) {
 
 function readSavedMusic(id: string): RoomMusic | null {
   try {
-    const raw = sessionStorage.getItem(musicStorageKey(id))
+    const raw = readKey(musicStorageKey(id))
     if (!raw) return null
     const parsed = JSON.parse(raw) as RoomMusic
     if (!parsed || typeof parsed.trackId !== 'string' || typeof parsed.playing !== 'boolean') return null
@@ -98,8 +123,8 @@ function readSavedMusic(id: string): RoomMusic | null {
 
 function writeSavedMusic(id: string, value: RoomMusic | null) {
   try {
-    if (!value) sessionStorage.removeItem(musicStorageKey(id))
-    else sessionStorage.setItem(musicStorageKey(id), JSON.stringify(value))
+    if (!value) removeKey(musicStorageKey(id))
+    else writeKey(musicStorageKey(id), JSON.stringify(value))
   } catch {
     /* 主持重新整理後仍可從記憶繼續。 */
   }
@@ -181,7 +206,14 @@ function readIsCorrect(data: unknown): boolean | null {
 }
 
 function publish() {
-  snapshot = { ...memory, notes: roomNotes, connection, called, selfPaceLink: selfPaceRpc }
+  snapshot = {
+    ...memory,
+    notes: roomNotes,
+    connection,
+    called,
+    selfPaceLink: selfPaceRpc,
+    pendingRoom: Boolean(roomId) && !memory.youId && connection !== 'live',
+  }
   for (const listener of listeners) listener()
 }
 
@@ -191,7 +223,7 @@ function notesStorageKey(id: string) {
 
 function readNotes(id: string): RoomNote[] {
   try {
-    const raw = sessionStorage.getItem(notesStorageKey(id))
+    const raw = readKey(notesStorageKey(id))
     if (!raw) return []
     const parsed = JSON.parse(raw) as RoomNote[]
     if (!Array.isArray(parsed)) return []
@@ -203,7 +235,7 @@ function readNotes(id: string): RoomNote[] {
 
 function writeNotes(id: string) {
   try {
-    sessionStorage.setItem(notesStorageKey(id), JSON.stringify(roomNotes))
+    writeKey(notesStorageKey(id), JSON.stringify(roomNotes))
   } catch {
     /* 自己畫面仍然留住剛送出嘅字。 */
   }
@@ -241,16 +273,20 @@ function bindNotes(id: string | null) {
 }
 
 function readDeck(): DeckId {
-  const raw = sessionStorage.getItem(DECK_KEY)
+  const raw = readKey(DECK_KEY)
   if (raw === 'money' || raw === 'relationship' || raw === 'core') return raw
   return 'core'
 }
 
 function rememberRoom(id: string | null) {
   const changed = id !== roomId
+  if (changed) {
+    sawLiveLobby = false
+    membershipMisses = 0
+  }
   roomId = id
-  if (id) sessionStorage.setItem(ROOM_KEY, id)
-  else sessionStorage.removeItem(ROOM_KEY)
+  if (id) writeKey(ROOM_KEY, id)
+  else removeKey(ROOM_KEY)
   if (changed) {
     resetSync()
     roomNotes = id ? readNotes(id) : []
@@ -314,7 +350,33 @@ function bindCardWave(id: string | null) {
 
 function rememberDeck(deck: DeckId) {
   deckPref = deck
-  sessionStorage.setItem(DECK_KEY, deck)
+  writeKey(DECK_KEY, deck)
+}
+
+function scheduleMembershipRetry() {
+  if (retryTimer != null) return
+  retryTimer = window.setTimeout(() => {
+    retryTimer = null
+    void scheduleRefresh()
+  }, 400)
+}
+
+function forgetSeat() {
+  if (retryTimer != null) {
+    window.clearTimeout(retryTimer)
+    retryTimer = null
+  }
+  membershipMisses = 0
+  sawLiveLobby = false
+  rememberRoom(null)
+  called = null
+  events = []
+  remoteAnswered = {}
+  playingSince = null
+  clearPace()
+  memory = { ...emptyState, room: { ...emptyState.room, deck: deckPref } }
+  connection = 'live'
+  publish()
 }
 
 async function rpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
@@ -341,6 +403,19 @@ async function refreshOnce() {
   }
   try {
     const lobby = await rpc<LobbySnapshot>('get_room_lobby', { p_room_id: roomId })
+    if (
+      shouldForgetEndedRoom({
+        status: lobby.status,
+        endedAt: lobby.ended_at,
+        sawLiveLobby,
+        hostDesk: pathIsHostDesk(window.location.pathname),
+      })
+    ) {
+      forgetSeat()
+      return
+    }
+    sawLiveLobby = true
+    membershipMisses = 0
     await loadEvents(lobby.room_id)
     memory = mapLobby(lobby, events, called, deckPref)
     if (memory.room.phase === 'playing') {
@@ -376,12 +451,17 @@ async function refreshOnce() {
     publish()
     publishRoomSync()
   } catch (error) {
-    const text = `${error instanceof Error ? error.message : ''} ${typeof error === 'object' && error && 'hint' in error ? String((error as { hint?: string }).hint) : ''}`
-    if (text.includes('room_not_found') || text.includes('not_member') || text.includes('not_in_room')) {
-      rememberRoom(null)
-      memory = { ...emptyState, room: { ...emptyState.room, deck: deckPref } }
-      events = []
-      called = null
+    const decision = seatAfterFault(roomId, lobbyErrorText(error), membershipMisses)
+    if (decision.seat == null && roomId) {
+      forgetSeat()
+      return
+    }
+    membershipMisses = decision.misses
+    if (decision.retry) {
+      connection = memory.youId ? 'reconnecting' : 'connecting'
+      publish()
+      scheduleMembershipRetry()
+      return
     }
     connection = 'reconnecting'
     publish()
@@ -491,13 +571,7 @@ export async function leaveRoom(): Promise<ActionResult> {
   return run(async () => {
     try {
       if (roomId) await rpc('leave_room', { p_room_id: roomId })
-      rememberRoom(null)
-      called = null
-      events = []
-      remoteAnswered = {}
-      playingSince = null
-      clearPace()
-      memory = { ...emptyState, room: { ...emptyState.room, deck: deckPref } }
+      forgetSeat()
       return { ok: true }
     } catch (error) {
       return fail(error)
@@ -740,8 +814,12 @@ export async function advanceSpeaker(): Promise<ActionResult> {
 function boot() {
   deckPref = readDeck()
   memory = { ...emptyState, room: { ...emptyState.room, deck: deckPref } }
-  roomId = sessionStorage.getItem(ROOM_KEY)
-  if (roomId) roomNotes = readNotes(roomId)
+  roomId = readKey(ROOM_KEY)
+  if (roomId) {
+    roomNotes = readNotes(roomId)
+    connection = 'connecting'
+    publish()
+  }
   void (async () => {
     try {
       await ensureAnonymousSession()
