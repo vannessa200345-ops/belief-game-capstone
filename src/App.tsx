@@ -20,6 +20,7 @@ import { JoinPage } from '@/screens/JoinPage'
 import { LobbyPage } from '@/screens/LobbyPage'
 import { PlayPage } from '@/screens/PlayPage'
 import { ResultPage } from '@/screens/ResultPage'
+import { TeacherPage } from '@/screens/TeacherPage'
 
 function MissingPage() {
   const { tx } = useLang()
@@ -66,6 +67,7 @@ export default function App() {
             <Route path="/about" element={<AboutPage />} />
             <Route path="/courses" element={<CoursesPage />} />
             <Route path="/book" element={<BookingPage />} />
+            <Route path="/teacher" element={<TeacherPage />} />
             <Route path="/play/lobby" element={<LobbyPage />} />
             <Route path="/play" element={<PlayPage />} />
             <Route path="/play/result" element={<ResultPage />} />

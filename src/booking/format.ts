@@ -4,6 +4,7 @@ export function formatWhen(iso: string, lang: Lang) {
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return iso
   return new Intl.DateTimeFormat(lang === 'en' ? 'en-HK' : 'zh-HK', {
+    timeZone: 'Asia/Hong_Kong',
     month: 'short',
     day: 'numeric',
     hour: '2-digit',

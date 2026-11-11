@@ -7,15 +7,33 @@ export interface PublicTeacher {
   bookable: boolean
 }
 
+export type SlotKind = 'group' | 'one_on_one'
+
 export interface PublicSlot {
   id: string
-  kind: 'group'
+  kind: SlotKind
   startsAt: string
   capacity: number
   bookedCount: number
   hostLabel: string | null
+  teacherId: string | null
   roomCode: string | null
   status: 'open' | 'full' | 'started'
+}
+
+export interface TeacherAccount {
+  id: string
+  slug: string
+  name: string
+  role: 'teacher' | 'operator'
+  bookable: boolean
+}
+
+export interface TeacherDirectoryEntry {
+  id: string
+  slug: string
+  name: string
+  bookable: boolean
 }
 
 export interface BookingBoard {
@@ -67,9 +85,20 @@ export interface BookingApi {
     contact: string | null
   }): Promise<{ ok: true; already: boolean } | Fail>
   bookOneOnOne(input: {
-    teacherId: string
-    startsAt: string
+    slotId: string
     name: string
     contact: string | null
-  }): Promise<{ ok: true } | Fail>
+  }): Promise<{ ok: true; already: boolean } | Fail>
+  teacherMe(): Promise<{ ok: true; teacher: TeacherAccount; directory: TeacherDirectoryEntry[] } | Fail>
+  teacherListSlots(input: {
+    kind: SlotKind
+    from: string
+    to: string
+  }): Promise<{ ok: true; slots: PublicSlot[] } | Fail>
+  teacherOpenSlot(input: { kind: SlotKind; startsAt: string }): Promise<{ ok: true; slot: PublicSlot } | Fail>
+  teacherCloseSlot(input: { slotId: string }): Promise<{ ok: true } | Fail>
+  teacherListBookings(input: { slotId: string }): Promise<{ ok: true; bookings: SlotBooking[] } | Fail>
+  /** Local preview only. The live backend rejects this. */
+  teacherPreview(input: { role: 'teacher' | 'operator' }): Promise<{ ok: true } | Fail>
+  teacherSignOut(): Promise<{ ok: true }>
 }

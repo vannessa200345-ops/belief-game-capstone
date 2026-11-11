@@ -13,6 +13,8 @@ export type RuleError =
   | 'invalid_display_name'
   | 'invalid_contact'
   | 'claim_invalid'
+  | 'invalid_email'
+  | 'password_format'
 
 function hasControl(value: string) {
   for (const char of value) {
@@ -78,6 +80,21 @@ export function parseContact(value: string): { ok: true; contact: string | null 
   if (!contact) return { ok: true, contact: null }
   if (contact.length > 80 || hasControl(contact)) return { ok: false, error: 'invalid_contact' }
   return { ok: true, contact }
+}
+
+export function parseEmail(value: string): { ok: true; email: string } | { ok: false; error: 'invalid_email' } {
+  const email = value.trim().toLowerCase()
+  if (!email || email.length > 160 || hasControl(email) || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    return { ok: false, error: 'invalid_email' }
+  }
+  return { ok: true, email }
+}
+
+export function parsePassword(value: string): { ok: true; password: string } | { ok: false; error: 'password_format' } {
+  if (value.trim().length < 8 || value.length > 72 || hasControl(value)) {
+    return { ok: false, error: 'password_format' }
+  }
+  return { ok: true, password: value }
 }
 
 export function parseClaimToken(value: string): { ok: true; token: string } | { ok: false; error: 'claim_invalid' } {

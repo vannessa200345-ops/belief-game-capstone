@@ -1,6 +1,15 @@
 import { ensureAnonymousSession, getSupabase } from '../lib/supabase.ts'
 import { bookingMessage } from './messages.ts'
-import type { BookingApi, BookingBoard, Fail, PublicSlot, PublicTeacher, SlotBooking } from './types.ts'
+import type {
+  BookingApi,
+  BookingBoard,
+  Fail,
+  PublicSlot,
+  PublicTeacher,
+  SlotBooking,
+  TeacherAccount,
+  TeacherDirectoryEntry,
+} from './types.ts'
 
 function errorText(error: unknown) {
   if (typeof error === 'object' && error) {
@@ -41,6 +50,20 @@ async function call(fn: string, args: Record<string, unknown>): Promise<{ ok: tr
   }
 }
 
+async function callSigned(fn: string, args: Record<string, unknown>): Promise<{ ok: true; data: unknown } | Fail> {
+  try {
+    const supabase = getSupabase()
+    const existing = await supabase.auth.getSession()
+    const user = existing.data.session?.user
+    if (!user || user.is_anonymous) return fail('not_authenticated')
+    const { data, error } = await supabase.rpc(fn, args)
+    if (error) return { ok: false, error: thrownMessage(error) }
+    return { ok: true, data }
+  } catch (error) {
+    return { ok: false, error: thrownMessage(error) }
+  }
+}
+
 function payloadError(data: unknown): Fail | null {
   const record = asRecord(data)
   if (!record) return fail('unknown')
@@ -66,24 +89,58 @@ function readTeacher(value: unknown): PublicTeacher | null {
 
 function readSlot(value: unknown): PublicSlot | null {
   const row = asRecord(value)
-  if (!row || row.kind !== 'group' || typeof row.id !== 'string' || typeof row.startsAt !== 'string') return null
+  if (!row || (row.kind !== 'group' && row.kind !== 'one_on_one') || typeof row.id !== 'string' || typeof row.startsAt !== 'string') {
+    return null
+  }
   const capacity = Number(row.capacity)
   const bookedCount = Number(row.bookedCount)
   if (!Number.isInteger(capacity) || capacity < 1 || capacity > 200) return null
   if (!Number.isInteger(bookedCount) || bookedCount < 0) return null
   if (row.status !== 'open' && row.status !== 'full' && row.status !== 'started') return null
   if (row.hostLabel != null && typeof row.hostLabel !== 'string') return null
+  if (row.teacherId != null && typeof row.teacherId !== 'string') return null
   if (row.roomCode != null && typeof row.roomCode !== 'string') return null
   return {
     id: row.id,
-    kind: 'group',
+    kind: row.kind,
     startsAt: row.startsAt,
     capacity,
     bookedCount,
     hostLabel: typeof row.hostLabel === 'string' ? row.hostLabel : null,
+    teacherId: typeof row.teacherId === 'string' ? row.teacherId : null,
     roomCode: typeof row.roomCode === 'string' ? row.roomCode : null,
     status: row.status,
   }
+}
+
+function readSlots(value: unknown) {
+  if (!Array.isArray(value)) return null
+  const slots: PublicSlot[] = []
+  for (const item of value) {
+    const slot = readSlot(item)
+    if (!slot) return null
+    slots.push(slot)
+  }
+  return slots
+}
+
+function readTeacherAccount(value: unknown): TeacherAccount | null {
+  const row = asRecord(value)
+  if (!row || typeof row.id !== 'string' || typeof row.slug !== 'string' || typeof row.name !== 'string') return null
+  if ((row.role !== 'teacher' && row.role !== 'operator') || typeof row.bookable !== 'boolean') return null
+  return { id: row.id, slug: row.slug, name: row.name, role: row.role, bookable: row.bookable }
+}
+
+function readDirectory(value: unknown): TeacherDirectoryEntry[] | null {
+  if (!Array.isArray(value)) return null
+  const directory: TeacherDirectoryEntry[] = []
+  for (const item of value) {
+    const row = asRecord(item)
+    if (!row || typeof row.id !== 'string' || typeof row.slug !== 'string' || typeof row.name !== 'string') return null
+    if (typeof row.bookable !== 'boolean') return null
+    directory.push({ id: row.id, slug: row.slug, name: row.name, bookable: row.bookable })
+  }
+  return directory
 }
 
 function readBoard(value: unknown): BookingBoard | null {
@@ -234,12 +291,77 @@ export const liveBooking: BookingApi = {
 
   async bookOneOnOne(input) {
     const called = await call('book_one_on_one', {
-      p_teacher_id: input.teacherId,
-      p_starts_at: input.startsAt,
+      p_slot_id: input.slotId,
       p_display_name: input.name,
       p_contact: input.contact,
     })
     if (!called.ok) return called
+    const problem = payloadError(called.data)
+    if (problem) return problem
+    return { ok: true, already: asRecord(called.data)?.already === true }
+  },
+
+  async teacherMe() {
+    const called = await callSigned('teacher_me', {})
+    if (!called.ok) return called
+    const problem = payloadError(called.data)
+    if (problem) return problem
+    const record = asRecord(called.data)
+    const teacher = readTeacherAccount(record?.teacher)
+    const directory = readDirectory(record?.directory)
+    if (!teacher || !directory) return fail('unknown')
+    return { ok: true, teacher, directory }
+  },
+
+  async teacherListSlots(input) {
+    const called = await callSigned('teacher_list_slots', {
+      p_kind: input.kind,
+      p_from: input.from,
+      p_to: input.to,
+    })
+    if (!called.ok) return called
+    const problem = payloadError(called.data)
+    if (problem) return problem
+    const slots = readSlots(asRecord(called.data)?.slots)
+    if (!slots) return fail('unknown')
+    return { ok: true, slots }
+  },
+
+  async teacherOpenSlot(input) {
+    const called = await callSigned('teacher_open_slot', {
+      p_kind: input.kind,
+      p_starts_at: input.startsAt,
+    })
+    if (!called.ok) return called
+    const problem = payloadError(called.data)
+    if (problem) return problem
+    const slot = readSlot(asRecord(called.data)?.slot)
+    if (!slot) return fail('unknown')
+    return { ok: true, slot }
+  },
+
+  async teacherCloseSlot(input) {
+    const called = await callSigned('teacher_close_slot', { p_slot_id: input.slotId })
+    if (!called.ok) return called
     return payloadError(called.data) ?? { ok: true }
+  },
+
+  async teacherListBookings(input) {
+    const called = await callSigned('teacher_list_bookings', { p_slot_id: input.slotId })
+    if (!called.ok) return called
+    const problem = payloadError(called.data)
+    if (problem) return problem
+    const bookings = readBookings(asRecord(called.data)?.bookings)
+    if (!bookings) return fail('unknown')
+    return { ok: true, bookings }
+  },
+
+  async teacherPreview() {
+    return fail('forbidden')
+  },
+
+  async teacherSignOut() {
+    await getSupabase().auth.signOut()
+    return { ok: true }
   },
 }
